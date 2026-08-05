@@ -1,4 +1,12 @@
-export function WaitingRoom({ roomCode, players }: { roomCode: string; players: { name: string }[] }) {
+export function WaitingRoom({
+  roomCode,
+  players,
+  onLeave,
+}: {
+  roomCode: string;
+  players: { name: string }[];
+  onLeave: () => void;
+}) {
   return (
     <div className="waiting">
       <h2>Waiting for opponent…</h2>
@@ -11,6 +19,9 @@ export function WaitingRoom({ roomCode, players }: { roomCode: string; players: 
           <li key={i}>{p.name}</li>
         ))}
       </ul>
+      <button type="button" onClick={onLeave}>
+        Back to lobby
+      </button>
     </div>
   );
 }

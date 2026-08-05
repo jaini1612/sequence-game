@@ -125,6 +125,13 @@ button:disabled {
   cursor: pointer;
 }
 
+.game__offline {
+  background: #78350f;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
 .board {
   display: grid;
   grid-template-columns: repeat(10, minmax(28px, 44px));

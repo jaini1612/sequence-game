@@ -133,10 +133,10 @@ io.on('connection', (socket: Socket) => {
     if (!room) return;
     const player = room.players.find((p) => p.socketId === socket.id);
     if (player) player.connected = false;
-    if (room.status === 'waiting') {
-      rooms.removeRoom(room.code);
-      return;
-    }
+    // A refresh or a phone dropping its WebSocket leaves the player disconnected but still
+    // seated, so never destroy the room (or the game) here - only mark a fully abandoned one
+    // for delayed cleanup, which a reconnect cancels.
+    rooms.scheduleCleanupIfAbandoned(room.code);
     broadcastRoom(room);
   });
 });

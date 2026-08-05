@@ -18,9 +18,12 @@ export interface Room {
 }
 
 const MAX_PLAYERS = 2;
+/** How long a fully-abandoned room is held open so a refresh or network blip can reclaim it. */
+const ABANDONED_ROOM_GRACE_MS = 120_000;
 
 export class RoomManager {
   private rooms = new Map<string, Room>();
+  private cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   createRoom(hostName: string, playerId: string, socketId: string): Room {
     let code = generateRoomCode();
@@ -41,6 +44,11 @@ export class RoomManager {
     if (!room) throw new Error('Room not found');
     if (room.status !== 'waiting') throw new Error('Room is not accepting new players');
     if (room.players.length >= MAX_PLAYERS) throw new Error('Room is full');
+    // Seating the same identity twice would leave the game unable to resolve an opponent, so
+    // reject it loudly rather than creating a room that can never start.
+    if (room.players.some((p) => p.id === playerId)) {
+      throw new Error('You are already in this room in another tab');
+    }
 
     room.players.push({ id: playerId, name, socketId, connected: true });
     return room;
@@ -58,7 +66,37 @@ export class RoomManager {
 
     player.socketId = socketId;
     player.connected = true;
+    this.cancelCleanup(room.code);
     return room;
+  }
+
+  /**
+   * Marks a room for deletion only if it is *still* completely abandoned once a grace period
+   * elapses. A refresh momentarily disconnects every player in a one-player room, and that must
+   * not destroy the room before the player's socket comes back.
+   */
+  scheduleCleanupIfAbandoned(code: string): void {
+    const key = code.toUpperCase();
+    const room = this.rooms.get(key);
+    if (!room || room.players.some((p) => p.connected)) return;
+
+    this.cancelCleanup(key);
+    const timer = setTimeout(() => {
+      this.cleanupTimers.delete(key);
+      const current = this.rooms.get(key);
+      if (current && current.players.every((p) => !p.connected)) this.rooms.delete(key);
+    }, ABANDONED_ROOM_GRACE_MS);
+    timer.unref?.();
+    this.cleanupTimers.set(key, timer);
+  }
+
+  private cancelCleanup(code: string): void {
+    const key = code.toUpperCase();
+    const timer = this.cleanupTimers.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.cleanupTimers.delete(key);
+    }
   }
 
   getRoom(code: string): Room | undefined {
@@ -72,7 +110,4 @@ export class RoomManager {
     return undefined;
   }
 
-  removeRoom(code: string): void {
-    this.rooms.delete(code);
-  }
 }

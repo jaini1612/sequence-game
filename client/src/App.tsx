@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CardCode, PlayerView, Position } from '@sequence/shared';
 import { socket } from './socket';
-import { getPlayerId } from './playerId';
+import { clearStoredRoomCode, getPlayerId, getStoredRoomCode, storeRoomCode } from './playerId';
 import { Lobby } from './Lobby';
 import { WaitingRoom } from './WaitingRoom';
 import { Board } from './Board';
@@ -10,9 +10,7 @@ import { Hud } from './Hud';
 import { computePlayableCells } from './gameHelpers';
 import './App.css';
 
-type Phase = 'lobby' | 'waiting' | 'playing';
-
-const ROOM_CODE_KEY = 'sequence:roomCode';
+type Phase = 'lobby' | 'rejoining' | 'waiting' | 'playing';
 
 interface RoomUpdate {
   code: string;
@@ -29,53 +27,74 @@ interface AckResponse {
 
 function App() {
   const [playerId] = useState(getPlayerId);
-  const [phase, setPhase] = useState<Phase>(() => (localStorage.getItem(ROOM_CODE_KEY) ? 'waiting' : 'lobby'));
-  const [roomCode, setRoomCode] = useState<string>(() => localStorage.getItem(ROOM_CODE_KEY) ?? '');
+  const [phase, setPhase] = useState<Phase>(() => (getStoredRoomCode() ? 'rejoining' : 'lobby'));
+  const [roomCode, setRoomCode] = useState<string>(getStoredRoomCode);
   const [roomPlayers, setRoomPlayers] = useState<{ name: string; connected: boolean }[]>([]);
   const [gameView, setGameView] = useState<PlayerView | null>(null);
   const [selectedCard, setSelectedCard] = useState<CardCode | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [connected, setConnected] = useState(socket.connected);
   const roomCodeRef = useRef(roomCode);
   roomCodeRef.current = roomCode;
+
+  function leaveRoom(message: string | null) {
+    clearStoredRoomCode();
+    setRoomCode('');
+    setGameView(null);
+    setRoomPlayers([]);
+    setSelectedCard(null);
+    setPhase('lobby');
+    setError(message);
+  }
 
   useEffect(() => {
     function handleRoomUpdate(payload: RoomUpdate) {
       setRoomPlayers(payload.players);
+      setPhase((current) => (current === 'rejoining' ? 'waiting' : current));
     }
     function handleGameUpdate(view: PlayerView) {
       setGameView(view);
       setSelectedCard(null);
       setPhase('playing');
     }
-    // Fires on the initial connection and again on every reconnect (dropped WebSocket from a
-    // backgrounded phone, network switch, server restart, ...), each of which hands the socket a
-    // new socket.id. Re-claim our existing player record so a reconnect mid-game doesn't lock us
-    // out of our own turn.
+    // Re-claims our seat after any (re)connect, since every reconnect assigns a new socket.id.
     function handleConnect() {
+      setConnected(true);
       const code = roomCodeRef.current;
       if (!code) return;
-      socket.emit('room:rejoin', { roomCode: code, playerId }, (res: AckResponse) => {
-        if (!res.ok) {
-          localStorage.removeItem(ROOM_CODE_KEY);
-          setRoomCode('');
-          setPhase('lobby');
-        }
-      });
+      socket
+        .timeout(10000)
+        .emit('room:rejoin', { roomCode: code, playerId }, (err: unknown, res?: AckResponse) => {
+          if (err || !res?.ok) {
+            // The room is gone (the server restarts with empty memory) or we were never seated.
+            leaveRoom(res?.error ?? 'That game is no longer available. Start a new one.');
+          }
+        });
     }
+    function handleDisconnect() {
+      setConnected(false);
+    }
+
     socket.on('room:update', handleRoomUpdate);
     socket.on('game:update', handleGameUpdate);
     socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    // The socket connects on import, so it may already be connected before this effect runs -
+    // in which case 'connect' has fired and will not fire again. Rejoin now instead of hanging.
+    if (socket.connected) handleConnect();
+
     return () => {
       socket.off('room:update', handleRoomUpdate);
       socket.off('game:update', handleGameUpdate);
       socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
     };
   }, [playerId]);
 
   function handleCreate(name: string) {
     socket.emit('room:create', { name, playerId }, (res: AckResponse) => {
       if (res.ok && res.roomCode) {
-        localStorage.setItem(ROOM_CODE_KEY, res.roomCode);
+        storeRoomCode(res.roomCode);
         setRoomCode(res.roomCode);
         setPhase('waiting');
         setError(null);
@@ -88,7 +107,7 @@ function App() {
   function handleJoin(name: string, code: string) {
     socket.emit('room:join', { name, roomCode: code, playerId }, (res: AckResponse) => {
       if (res.ok && res.roomCode) {
-        localStorage.setItem(ROOM_CODE_KEY, res.roomCode);
+        storeRoomCode(res.roomCode);
         setRoomCode(res.roomCode);
         setPhase('waiting');
         setError(null);
@@ -114,14 +133,29 @@ function App() {
     return <Lobby onCreate={handleCreate} onJoin={handleJoin} error={error} />;
   }
 
+  if (phase === 'rejoining') {
+    return (
+      <div className="waiting">
+        <h2>Reconnecting…</h2>
+        <p>Rejoining your game. The server may take a moment to wake up.</p>
+        <button type="button" onClick={() => leaveRoom(null)}>
+          Back to lobby
+        </button>
+      </div>
+    );
+  }
+
   if (phase === 'waiting' || !gameView) {
-    return <WaitingRoom roomCode={roomCode} players={roomPlayers} />;
+    return (
+      <WaitingRoom roomCode={roomCode} players={roomPlayers} onLeave={() => leaveRoom(null)} />
+    );
   }
 
   const playableCells = selectedCard && gameView.isYourTurn ? computePlayableCells(gameView, selectedCard) : [];
 
   return (
     <div className="game">
+      {!connected && <p className="game__offline">Reconnecting…</p>}
       <Hud view={gameView} isMyTurn={gameView.isYourTurn} />
       {error && (
         <p className="game__error" onClick={() => setError(null)}>
