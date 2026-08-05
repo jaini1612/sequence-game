@@ -45,38 +45,63 @@ function startGameIfReady(room: Room): void {
 }
 
 io.on('connection', (socket: Socket) => {
-  socket.on('room:create', (data: { name: string }, ack: (res: any) => void) => {
+  socket.on('room:create', (data: { name: string; playerId?: string }, ack: (res: any) => void) => {
     try {
       const name = (data?.name || 'Player 1').slice(0, 20);
-      const room = rooms.createRoom(name, socket.id);
+      const playerId = data?.playerId || socket.id;
+      const room = rooms.createRoom(name, playerId, socket.id);
       socket.join(room.code);
-      ack({ ok: true, roomCode: room.code, playerId: socket.id });
+      ack({ ok: true, roomCode: room.code, playerId });
       broadcastRoom(room);
-    } catch (err) {
-      ack({ ok: false, error: (err as Error).message });
-    }
-  });
-
-  socket.on('room:join', (data: { roomCode: string; name: string }, ack: (res: any) => void) => {
-    try {
-      const name = (data?.name || 'Player 2').slice(0, 20);
-      const room = rooms.joinRoom(data.roomCode, name, socket.id);
-      socket.join(room.code);
-      ack({ ok: true, roomCode: room.code, playerId: socket.id });
-      broadcastRoom(room);
-      startGameIfReady(room);
     } catch (err) {
       ack({ ok: false, error: (err as Error).message });
     }
   });
 
   socket.on(
+    'room:join',
+    (data: { roomCode: string; name: string; playerId?: string }, ack: (res: any) => void) => {
+      try {
+        const name = (data?.name || 'Player 2').slice(0, 20);
+        const playerId = data?.playerId || socket.id;
+        const room = rooms.joinRoom(data.roomCode, name, playerId, socket.id);
+        socket.join(room.code);
+        ack({ ok: true, roomCode: room.code, playerId });
+        broadcastRoom(room);
+        startGameIfReady(room);
+      } catch (err) {
+        ack({ ok: false, error: (err as Error).message });
+      }
+    },
+  );
+
+  // Re-attaches a reconnected socket (new socket.id) to its existing player record, so a dropped
+  // and restored connection (backgrounded phone, network switch, server restart) doesn't lock the
+  // player out of their own turn with a spurious "Not your turn".
+  socket.on(
+    'room:rejoin',
+    (data: { roomCode: string; playerId: string }, ack: (res: any) => void) => {
+      try {
+        const room = rooms.rejoinRoom(data.roomCode, data.playerId, socket.id);
+        socket.join(room.code);
+        ack({ ok: true, roomCode: room.code, playerId: data.playerId });
+        broadcastRoom(room);
+        if (room.game) broadcastGame(room);
+      } catch (err) {
+        ack({ ok: false, error: (err as Error).message });
+      }
+    },
+  );
+
+  socket.on(
     'game:playCard',
     (data: { roomCode: string; card: string; position: { row: number; col: number } }, ack: (res: any) => void) => {
       const room = rooms.getRoom(data?.roomCode ?? '');
       if (!room || !room.game) return ack({ ok: false, error: 'Game not found' });
+      const player = room.players.find((p) => p.socketId === socket.id);
+      if (!player) return ack({ ok: false, error: 'Not part of this room' });
       try {
-        playCard(room.game, socket.id, data.card, data.position);
+        playCard(room.game, player.id, data.card, data.position);
         ack({ ok: true });
         broadcastGame(room);
         if (room.game.winnerId) room.status = 'finished';
@@ -91,8 +116,10 @@ io.on('connection', (socket: Socket) => {
     (data: { roomCode: string; card: string }, ack: (res: any) => void) => {
       const room = rooms.getRoom(data?.roomCode ?? '');
       if (!room || !room.game) return ack({ ok: false, error: 'Game not found' });
+      const player = room.players.find((p) => p.socketId === socket.id);
+      if (!player) return ack({ ok: false, error: 'Not part of this room' });
       try {
-        discardDeadCard(room.game, socket.id, data.card);
+        discardDeadCard(room.game, player.id, data.card);
         ack({ ok: true });
         broadcastGame(room);
       } catch (err) {
