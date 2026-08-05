@@ -9,16 +9,16 @@ export const CORNERS: Position[] = [
 
 /** The standard printed Sequence board layout: 4 wild corners, each of the 48 non-jack cards twice. */
 const BOARD_LAYOUT: BoardCell[][] = [
-  [WILD, 'AC', 'KC', 'QC', '10C', '9C', '8C', '7C', '6C', WILD],
-  ['AD', '7S', '8S', '9S', '10S', 'QS', 'KS', 'AS', '5C', '2S'],
-  ['KD', '6S', '10C', '9C', '8C', '7C', '6C', '2D', '4C', '3S'],
-  ['QD', '5S', 'QC', '8H', '7H', '6H', '5C', '3D', '3C', '4S'],
-  ['10D', '4S', 'KC', '9H', '2H', '5H', '4C', '4D', '2C', '5S'],
-  ['9D', '3S', 'AC', '10H', '3H', '4H', '3C', '5D', 'AH', '6S'],
-  ['8D', '2S', 'AD', 'QH', 'KH', 'AH', '2C', '6D', 'KH', '7S'],
-  ['7D', '2H', 'KD', 'QD', '10D', '9D', '8D', '7D', 'QH', '8S'],
-  ['6D', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', '9S'],
-  [WILD, '5D', '4D', '3D', '2D', 'AS', 'KS', 'QS', '10S', WILD],
+  [WILD, '2S', '3S', '4S', '5S', '10D', 'QD', 'KD', 'AD', WILD],
+  ['6C', '5C', '4C', '3C', '2C', '4S', '5S', '6S', '7S', 'AC'],
+  ['7C', 'AS', '2D', '3D', '4D', 'KC', 'QC', '10C', '8S', 'KC'],
+  ['8C', 'KS', '6C', '5C', '4C', '9H', '8H', '9C', '9S', 'QC'],
+  ['9C', 'QS', '7C', '6H', '5H', '2H', '7H', '8C', '10S', '10C'],
+  ['AS', '7H', '9D', 'AH', '4H', '3H', 'KH', '10D', '6H', '2D'],
+  ['KS', '8H', '8D', '2C', '3C', '10H', 'QH', 'QD', '5H', '3D'],
+  ['QS', '9H', '7D', '6D', '5D', 'AC', 'AD', 'KD', '4H', '4D'],
+  ['10S', '10H', 'QH', 'KH', 'AH', '3S', '2S', '2H', '3H', '5D'],
+  [WILD, '9S', '8S', '7S', '6S', '9D', '8D', '7D', '6D', WILD],
 ];
 
 export function buildBoardLayout(): BoardCell[][] {

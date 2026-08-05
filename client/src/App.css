@@ -1,30 +1,159 @@
 .lobby {
+  width: min(90vw, 360px);
+  padding: 1.5rem;
+  /* Sage playing surface inside a dark green frame, the way the printed board edge reads. */
+  border: 3px solid #17241d;
+  outline: 1px solid rgba(214, 222, 200, 0.35);
+  outline-offset: -5px;
+  border-radius: 14px;
+  background: linear-gradient(#175a42, #0e3a2b);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+/* Three cards fanned out with two chips resting on them, as if mid-game. */
+.lobby__hero {
+  position: relative;
+  height: 108px;
+  margin-bottom: 0.5rem;
+}
+
+.lobby__fan {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  background: #124a37;
-  padding: 2rem;
-  border-radius: 12px;
-  min-width: 320px;
+  justify-content: center;
+}
+
+.lobby__fan .card {
+  --card-font: 15px;
+  width: 66px;
+  height: 92px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Outer two tuck behind the middle card, which sits square on top. */
+.lobby__fan .card:first-child {
+  transform: translateX(24%) rotate(-14deg) translateY(6px);
+  transform-origin: bottom center;
+  z-index: 1;
+}
+
+.lobby__fan .card:nth-child(2) {
+  z-index: 3;
+}
+
+.lobby__fan .card:last-child {
+  transform: translateX(-24%) rotate(14deg) translateY(6px);
+  transform-origin: bottom center;
+  z-index: 2;
+}
+
+/* Scoped to the hero so these win over the base .chip sizing defined further down. */
+.lobby__hero .lobby__chip {
+  position: absolute;
+  bottom: 0;
+  width: 42px;
+  font-size: 17px;
+}
+
+.lobby__chip.chip--blue {
+  left: 24%;
+  z-index: 4;
+}
+
+.lobby__chip.chip--red {
+  right: 24%;
+  z-index: 4;
+}
+
+.lobby__title {
+  margin: 0;
+  text-align: center;
+  font-size: 2.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fdf6e3;
+  /* Slight relief, like the wordmark printed on the box lid. */
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.lobby__tagline {
+  margin: 0.25rem 0 1.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #8fd4bb;
 }
 
 .lobby__field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.lobby__field-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8fd4bb;
+}
+
+.lobby input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(214, 222, 200, 0.28);
+  background: rgba(0, 0, 0, 0.3);
+  color: #f2f2f2;
+  font: inherit;
+}
+
+.lobby input::placeholder {
+  color: rgba(242, 242, 242, 0.35);
+}
+
+.lobby input:focus-visible {
+  outline: none;
+  border-color: #8fa383;
+}
+
+.lobby__code {
+  text-align: center;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+}
+
+.lobby__primary {
+  width: 100%;
+  padding: 0.7rem;
+  font-size: 1rem;
+  background: linear-gradient(#f7d24a, #e0a80f);
+  box-shadow: 0 3px 0 #a97d08;
+}
+
+.lobby__primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #a97d08;
+}
+
+/* Hairline rule with the label sitting in a gap in the middle. */
+.lobby__or {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.6rem;
+  margin: 1.1rem 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(143, 212, 187, 0.7);
 }
 
-.lobby__field input,
-.lobby__join input {
-  padding: 0.5rem;
-  border-radius: 6px;
-  border: none;
-}
-
-.lobby__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.lobby__or::before,
+.lobby__or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.13);
 }
 
 .lobby__join {
@@ -32,8 +161,22 @@
   gap: 0.5rem;
 }
 
+.lobby__join button {
+  padding: 0.6rem 1.1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(214, 222, 200, 0.35);
+  color: #fdf6e3;
+}
+
+.lobby__join button:not(:disabled):hover {
+  background: rgba(214, 222, 200, 0.16);
+}
+
 .lobby__error {
+  margin: 1rem 0 0;
+  text-align: center;
   color: #f87171;
+  font-size: 0.85rem;
 }
 
 button {
@@ -132,20 +275,53 @@ button:disabled {
   margin: 0;
 }
 
+/* Printed board edge: a thick band carrying the wordmark down both sides. */
+.board-frame {
+  /* Cell width drives every measurement inside the board, so the whole thing scales as one unit. */
+  --cell-w: clamp(24px, min(6.6vw, 4.9vh), 52px);
+  --card-font: calc(var(--cell-w) * 0.235);
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: stretch;
+  /* Sage playing field, wrapped in the dark green edge band. */
+  background: #71806a;
+  border: calc(var(--cell-w) * 0.26) solid #17241d;
+  padding: calc(var(--cell-w) * 0.16);
+  border-radius: calc(var(--cell-w) * 0.22);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.board-frame__wordmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(var(--cell-w) * 0.16);
+  writing-mode: vertical-rl;
+  font-size: calc(var(--cell-w) * 0.5);
+  /* Keeps the vertical text's inline box tight, so the side band stays narrow on phones. */
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+
+/* Both wordmarks face outwards, so the left one runs bottom-to-top. */
+.board-frame__wordmark--left {
+  transform: rotate(180deg);
+}
+
 .board {
   display: grid;
-  grid-template-columns: repeat(10, minmax(28px, 44px));
-  grid-template-rows: repeat(10, minmax(28px, 44px));
-  gap: 2px;
-  background: #0a2e22;
-  padding: 6px;
-  border-radius: 8px;
+  grid-template-columns: repeat(10, var(--cell-w));
+  grid-template-rows: repeat(10, calc(var(--cell-w) * 1.4));
+  gap: calc(var(--cell-w) * 0.09);
 }
 
 .board__cell {
   position: relative;
-  background: #eee;
-  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,31 +329,40 @@ button:disabled {
 
 .board__cell--playable {
   outline: 2px solid gold;
+  outline-offset: 1px;
+  border-radius: 0.3em;
   cursor: pointer;
 }
 
 .board__wild {
-  color: #c9a227;
-  font-size: 1.2rem;
-}
-
-.card {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: calc(var(--card-font) * 0.3);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+
+.card {
+  position: relative;
+  display: block;
   width: 100%;
   height: 100%;
   border: none;
-  background: transparent;
-  font-weight: bold;
+  background: #fff;
+  border-radius: 0.3em;
+  font-size: var(--card-font, 11px);
+  font-weight: 700;
   line-height: 1;
   padding: 0;
+  overflow: hidden;
   cursor: default;
 }
 
 .card--red {
-  color: #c0392b;
+  color: #d1121a;
 }
 
 .card--black {
@@ -190,40 +375,122 @@ button:disabled {
 
 .card--selected {
   outline: 2px solid #f5c518;
-  border-radius: 3px;
 }
 
 .card--dead {
-  opacity: 0.4;
-  text-decoration: line-through;
+  opacity: 0.45;
 }
 
-.card__rank {
-  font-size: 0.7rem;
+.card__index {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.95;
 }
 
-.card__suit {
-  font-size: 0.9rem;
+.card__index--tl {
+  top: 4%;
+  left: 5%;
+}
+
+.card__index--br {
+  bottom: 4%;
+  right: 5%;
+  transform: rotate(180deg);
+}
+
+.card__index-suit {
+  font-size: 0.85em;
+}
+
+.card__face {
+  position: absolute;
+  top: 7%;
+  bottom: 7%;
+  left: 21%;
+  right: 11%;
+}
+
+.card__pip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 1.05em;
+}
+
+.card__pip--flip {
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.card__pip--ace {
+  left: 50%;
+  top: 50%;
+  font-size: 2.6em;
+}
+
+/* Court cards get illustrated art, so their panel runs closer to the card edges. */
+.card__face--court {
+  top: 4%;
+  bottom: 4%;
+  left: 17%;
+  right: 7%;
+}
+
+.card__art {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .chip {
   position: absolute;
-  width: 60%;
-  height: 60%;
+  width: 72%;
+  aspect-ratio: 1;
   border-radius: 50%;
-  opacity: 0.85;
+  font-size: var(--card-font, 11px);
+  display: grid;
+  place-items: center;
+  /* Domed plastic: a bright rim on top, shadow underneath, and a cast shadow on the card. */
+  box-shadow:
+    inset 0 0.11em 0.14em rgba(255, 255, 255, 0.45),
+    inset 0 -0.13em 0.16em rgba(0, 0, 0, 0.45),
+    inset 0 0 0 0.1em rgba(255, 255, 255, 0.16),
+    0 0.09em 0.16em rgba(0, 0, 0, 0.55);
+}
+
+/* Raised ring pressed into the plastic just inside the rim. */
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: 11%;
+  border-radius: 50%;
+  border: 0.07em solid rgba(0, 0, 0, 0.22);
+  box-shadow: 0 -0.05em 0 rgba(255, 255, 255, 0.3);
+}
+
+.chip__emblem {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  place-items: center;
+  gap: 0.05em;
+  font-size: 0.9em;
+  line-height: 0.95;
+  /* Same colour as the chip, shaped only by the light — like a moulded emblem. */
+  color: rgba(0, 0, 0, 0.32);
+  text-shadow: 0 0.07em 0 rgba(255, 255, 255, 0.35);
 }
 
 .chip--blue {
-  background: #2563eb;
+  background: radial-gradient(circle at 34% 27%, #4b5cc0 0%, #2c3a8e 55%, #1b2560 100%);
 }
 
 .chip--red {
-  background: #dc2626;
+  background: radial-gradient(circle at 34% 27%, #f4595f 0%, #dc2a35 55%, #9e131d 100%);
 }
 
 .chip--sequenced {
-  box-shadow: 0 0 0 3px gold inset;
+  outline: 0.14em solid gold;
+  outline-offset: -0.14em;
 }
 
 .hand {
@@ -241,10 +508,9 @@ button:disabled {
 }
 
 .hand__slot .card {
-  width: 44px;
-  height: 60px;
-  background: #fff;
-  border-radius: 6px;
+  --card-font: 12px;
+  width: 52px;
+  height: 73px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 

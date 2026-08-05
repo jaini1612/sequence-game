@@ -1,5 +1,6 @@
 import { WILD, type PlayerView, type Position } from '@sequence/shared';
 import { Card } from './Card';
+import { CornerTile } from './CornerTile';
 
 function isPlayable(playable: Position[], row: number, col: number): boolean {
   return playable.some((p) => p.row === row && p.col === col);
@@ -19,8 +20,12 @@ export function Board({
   onCellClick: (pos: Position) => void;
 }) {
   return (
-    <div className="board">
-      {view.board.map((row, rowIdx) =>
+    <div className="board-frame">
+      <span className="board-frame__wordmark board-frame__wordmark--left" aria-hidden="true">
+        Sequence
+      </span>
+      <div className="board">
+        {view.board.map((row, rowIdx) =>
         row.map((cell, colIdx) => {
           const chip = view.chips[rowIdx][colIdx];
           const clickable = isPlayable(playableCells, rowIdx, colIdx);
@@ -33,15 +38,30 @@ export function Board({
               onClick={clickable ? () => onCellClick({ row: rowIdx, col: colIdx }) : undefined}
             >
               {cell === WILD ? (
-                <div className="board__wild">★</div>
+                <div className="board__wild" aria-label="Free corner">
+                  <CornerTile />
+                </div>
               ) : (
                 <Card code={cell} />
               )}
-              {chip && <div className={`chip chip--${chip.toLowerCase()} ${sequenced ? 'chip--sequenced' : ''}`} />}
+              {chip && (
+                <div className={`chip chip--${chip.toLowerCase()} ${sequenced ? 'chip--sequenced' : ''}`}>
+                  <span className="chip__emblem" aria-hidden="true">
+                    <span>♥</span>
+                    <span>♠</span>
+                    <span>♦</span>
+                    <span>♣</span>
+                  </span>
+                </div>
+              )}
             </div>
           );
-        }),
-      )}
+          }),
+        )}
+      </div>
+      <span className="board-frame__wordmark board-frame__wordmark--right" aria-hidden="true">
+        Sequence
+      </span>
     </div>
   );
 }
