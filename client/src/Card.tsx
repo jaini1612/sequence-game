@@ -24,24 +24,31 @@ export function Card({
 }) {
   const { rank, suit } = parseCard(code);
   const isRed = RED_SUITS.has(suit);
-
-  return (
-    <button
-      type="button"
-      className={[
-        'card',
-        isRed ? 'card--red' : 'card--black',
-        selected ? 'card--selected' : '',
-        playable ? 'card--playable' : '',
-        dead ? 'card--dead' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      onClick={onClick}
-      disabled={!onClick}
-    >
+  const className = [
+    'card',
+    isRed ? 'card--red' : 'card--black',
+    selected ? 'card--selected' : '',
+    playable ? 'card--playable' : '',
+    dead ? 'card--dead' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const face = (
+    <>
       <span className="card__rank">{rank}</span>
       <span className="card__suit">{SUIT_SYMBOL[suit]}</span>
+    </>
+  );
+
+  // Render as a plain div (not a disabled button) when non-interactive: a disabled <button>
+  // swallows the click instead of letting it bubble to the containing board cell's handler.
+  if (!onClick) {
+    return <div className={className}>{face}</div>;
+  }
+
+  return (
+    <button type="button" className={className} onClick={onClick}>
+      {face}
     </button>
   );
 }
