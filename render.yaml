@@ -4,7 +4,9 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm install
+    # tsx (the start command's runner) is a devDependency, so it must be installed explicitly -
+    # a plain `npm install` skips devDependencies whenever NODE_ENV=production.
+    buildCommand: npm install --include=dev
     startCommand: npm run start -w server
     healthCheckPath: /health
     envVars:
