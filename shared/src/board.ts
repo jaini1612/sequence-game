@@ -1,7 +1,4 @@
-import { BOARD_SIZE, WILD, type BoardCell, type CardCode, type Position, type Rank, type Suit } from './types.js';
-
-const SUITS: Suit[] = ['D', 'C', 'H', 'S'];
-const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Q', 'K', 'A'];
+import { BOARD_SIZE, WILD, type BoardCell, type Position } from './types.js';
 
 export const CORNERS: Position[] = [
   { row: 0, col: 0 },
@@ -10,50 +7,20 @@ export const CORNERS: Position[] = [
   { row: BOARD_SIZE - 1, col: BOARD_SIZE - 1 },
 ];
 
-function isCorner(row: number, col: number): boolean {
-  return CORNERS.some((c) => c.row === row && c.col === col);
-}
+/** The standard printed Sequence board layout: 4 wild corners, each of the 48 non-jack cards twice. */
+const BOARD_LAYOUT: BoardCell[][] = [
+  [WILD, 'AC', 'KC', 'QC', '10C', '9C', '8C', '7C', '6C', WILD],
+  ['AD', '7S', '8S', '9S', '10S', 'QS', 'KS', 'AS', '5C', '2S'],
+  ['KD', '6S', '10C', '9C', '8C', '7C', '6C', '2D', '4C', '3S'],
+  ['QD', '5S', 'QC', '8H', '7H', '6H', '5C', '3D', '3C', '4S'],
+  ['10D', '4S', 'KC', '9H', '2H', '5H', '4C', '4D', '2C', '5S'],
+  ['9D', '3S', 'AC', '10H', '3H', '4H', '3C', '5D', 'AH', '6S'],
+  ['8D', '2S', 'AD', 'QH', 'KH', 'AH', '2C', '6D', 'KH', '7S'],
+  ['7D', '2H', 'KD', 'QD', '10D', '9D', '8D', '7D', 'QH', '8S'],
+  ['6D', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', '9S'],
+  [WILD, '5D', '4D', '3D', '2D', 'AS', 'KS', 'QS', '10S', WILD],
+];
 
-/**
- * There isn't a machine-readable copy of the printed Funskool board available here, so rather
- * than guess exact cell positions from memory, this builds a layout that satisfies the real
- * constraints: 4 wild corners, and each of the 48 non-jack cards appearing exactly twice,
- * placed at centrally-symmetric positions (rotating the board 180 degrees maps each card onto
- * its duplicate) the way the printed board does.
- */
 export function buildBoardLayout(): BoardCell[][] {
-  const nonCornerPositions: Position[] = [];
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      if (!isCorner(row, col)) nonCornerPositions.push({ row, col });
-    }
-  }
-
-  const uniqueCards: CardCode[] = [];
-  for (const suit of SUITS) {
-    for (const rank of RANKS) {
-      uniqueCards.push(`${rank}${suit}`);
-    }
-  }
-
-  const board: BoardCell[][] = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(WILD));
-
-  const seen = new Set<string>();
-  let cardIndex = 0;
-  for (const pos of nonCornerPositions) {
-    const key = `${pos.row},${pos.col}`;
-    if (seen.has(key)) continue;
-    const mirrored: Position = { row: BOARD_SIZE - 1 - pos.row, col: BOARD_SIZE - 1 - pos.col };
-    const mirroredKey = `${mirrored.row},${mirrored.col}`;
-
-    const card = uniqueCards[cardIndex];
-    cardIndex++;
-
-    board[pos.row][pos.col] = card;
-    board[mirrored.row][mirrored.col] = card;
-    seen.add(key);
-    seen.add(mirroredKey);
-  }
-
-  return board;
+  return BOARD_LAYOUT.map((row) => [...row]);
 }
