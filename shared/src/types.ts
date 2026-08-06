@@ -40,6 +40,8 @@ export interface GameState {
   drawPile: CardCode[];
   discardPile: CardCode[];
   sequences: SequenceRecord[];
+  /** Where the most recent chip was placed, so the UI can point it out. Removals do not count. */
+  lastPlacement: Position | null;
   winnerId: string | null;
   /** Official rules allow discarding only one dead card per turn, before your actual play. */
   deadCardDiscardedThisTurn: boolean;

@@ -30,6 +30,7 @@ export function Board({
           const chip = view.chips[rowIdx][colIdx];
           const clickable = isPlayable(playableCells, rowIdx, colIdx);
           const sequenced = isInSequence(view, rowIdx, colIdx);
+          const latest = view.lastPlacement?.row === rowIdx && view.lastPlacement?.col === colIdx;
 
           return (
             <div
@@ -45,7 +46,16 @@ export function Board({
                 <Card code={cell} />
               )}
               {chip && (
-                <div className={`chip chip--${chip.toLowerCase()} ${sequenced ? 'chip--sequenced' : ''}`}>
+                <div
+                  className={[
+                    'chip',
+                    `chip--${chip.toLowerCase()}`,
+                    sequenced ? 'chip--sequenced' : '',
+                    latest ? 'chip--latest' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
                   <span className="chip__emblem" aria-hidden="true">
                     <span>♥</span>
                     <span>♠</span>

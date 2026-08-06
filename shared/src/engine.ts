@@ -55,6 +55,7 @@ export function createGame(playerIds: [string, string]): GameState {
     drawPile,
     discardPile: [],
     sequences: [],
+    lastPlacement: null,
     winnerId: null,
     deadCardDiscardedThisTurn: false,
   };
@@ -229,6 +230,10 @@ export function playCard(
     if (occupant === player.color) throw new Error('Cannot remove your own chip');
     if (state.sequenceUse[row][col] > 0) throw new Error('Cannot remove a chip that is part of a sequence');
     state.chips[row][col] = null;
+    // Upholds the invariant that lastPlacement, when set, names a cell that still holds a chip.
+    if (state.lastPlacement?.row === row && state.lastPlacement?.col === col) {
+      state.lastPlacement = null;
+    }
   } else {
     if (state.board[row][col] !== card) throw new Error('Card does not match that space');
     if (state.chips[row][col] !== null) throw new Error('Space already occupied');
@@ -239,6 +244,7 @@ export function playCard(
   state.discardPile.push(card);
 
   if (isTwoEyedJack || !isOneEyedJack) {
+    state.lastPlacement = { row, col };
     applySequences(state, position, player);
   }
 

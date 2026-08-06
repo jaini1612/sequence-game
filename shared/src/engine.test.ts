@@ -96,6 +96,7 @@ describe('playCard - normal cards', () => {
     expect(state.chips[pos.row][pos.col]).toBe('BLUE');
     expect(state.players[0].hand).toEqual(['3D']);
     expect(state.discardPile).toEqual(['2D']);
+    expect(state.lastPlacement).toEqual(pos);
     expect(state.currentPlayerIndex).toBe(1);
   });
 
@@ -150,6 +151,30 @@ describe('playCard - one-eyed jacks (remove)', () => {
     playCard(state, 'p1', 'JH', { row: 5, col: 5 });
 
     expect(state.chips[5][5]).toBeNull();
+  });
+
+  it('clears lastPlacement when it is the chip being removed', () => {
+    const state = makeState();
+    state.chips[5][5] = 'RED';
+    state.lastPlacement = { row: 5, col: 5 };
+    state.players[0].hand = ['JH'];
+    state.drawPile = ['3D'];
+
+    playCard(state, 'p1', 'JH', { row: 5, col: 5 });
+
+    expect(state.lastPlacement).toBeNull();
+  });
+
+  it('keeps lastPlacement when some other chip is removed', () => {
+    const state = makeState();
+    state.chips[5][5] = 'RED';
+    state.lastPlacement = { row: 2, col: 3 };
+    state.players[0].hand = ['JH'];
+    state.drawPile = ['3D'];
+
+    playCard(state, 'p1', 'JH', { row: 5, col: 5 });
+
+    expect(state.lastPlacement).toEqual({ row: 2, col: 3 });
   });
 
   it('rejects removing your own chip', () => {

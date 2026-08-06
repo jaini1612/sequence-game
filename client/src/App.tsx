@@ -5,9 +5,11 @@ import { clearStoredRoomCode, getPlayerId, getStoredRoomCode, storeRoomCode } fr
 import { Lobby } from './Lobby';
 import { WaitingRoom } from './WaitingRoom';
 import { Board } from './Board';
+import { DiscardPile } from './DiscardPile';
 import { Hand } from './Hand';
 import { Hud } from './Hud';
 import { computePlayableCells } from './gameHelpers';
+import { playTurnChime } from './sound';
 import './App.css';
 
 type Phase = 'lobby' | 'rejoining' | 'waiting' | 'playing';
@@ -36,9 +38,12 @@ function App() {
   const [connected, setConnected] = useState(socket.connected);
   const roomCodeRef = useRef(roomCode);
   roomCodeRef.current = roomCode;
+  // null until we have seen a view, so the chime only fires on a real change of turn.
+  const wasMyTurnRef = useRef<boolean | null>(null);
 
   function leaveRoom(message: string | null) {
     clearStoredRoomCode();
+    wasMyTurnRef.current = null;
     setRoomCode('');
     setGameView(null);
     setRoomPlayers([]);
@@ -53,6 +58,9 @@ function App() {
       setPhase((current) => (current === 'rejoining' ? 'waiting' : current));
     }
     function handleGameUpdate(view: PlayerView) {
+      // Only on the opponent -> you handover, so a reload or reconnect mid-turn stays silent.
+      if (wasMyTurnRef.current === false && view.isYourTurn && !view.winnerId) playTurnChime();
+      wasMyTurnRef.current = view.isYourTurn;
       setGameView(view);
       setSelectedCard(null);
       setPhase('playing');
@@ -165,11 +173,14 @@ function App() {
       {gameView.winnerId && (
         <div className="win-banner">{gameView.winnerId === gameView.you.id ? 'You win! 🎉' : 'Opponent wins'}</div>
       )}
-      <Board
-        view={gameView}
-        playableCells={playableCells}
-        onCellClick={(pos) => selectedCard && handlePlayCard(selectedCard, pos)}
-      />
+      <div className="game__table">
+        <DiscardPile view={gameView} />
+        <Board
+          view={gameView}
+          playableCells={playableCells}
+          onCellClick={(pos) => selectedCard && handlePlayCard(selectedCard, pos)}
+        />
+      </div>
       <Hand
         view={gameView}
         isMyTurn={gameView.isYourTurn && !gameView.winnerId}

@@ -275,11 +275,44 @@ button:disabled {
   margin: 0;
 }
 
+/* The board with its discard pile alongside. */
+.game__table {
+  /* Cell width drives every measurement in here, so board and pile scale as one unit. The board
+     frame is 13.3 cells wide and the pile column another 1.65, hence the divisor of 15. */
+  --cell-w: clamp(18px, min(calc((100vw - 2.2rem) / 15), 4.9vh), 52px);
+  --card-font: calc(var(--cell-w) * 0.235);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--cell-w) * 0.4);
+}
+
+.discard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--cell-w) * 0.2);
+  width: calc(var(--cell-w) * 1.25);
+}
+
+.discard__label {
+  font-size: calc(var(--cell-w) * 0.22);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(242, 242, 242, 0.65);
+}
+
+/* Sized here rather than on the card, since the slot also has to show when the pile is empty. */
+.discard__slot {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  border-radius: calc(var(--cell-w) * 0.07);
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  box-shadow: 0 calc(var(--cell-w) * 0.06) calc(var(--cell-w) * 0.14) rgba(0, 0, 0, 0.45);
+}
+
 /* Printed board edge: a thick band carrying the wordmark down both sides. */
 .board-frame {
-  /* Cell width drives every measurement inside the board, so the whole thing scales as one unit. */
-  --cell-w: clamp(24px, min(6.6vw, 4.9vh), 52px);
-  --card-font: calc(var(--cell-w) * 0.235);
   display: grid;
   grid-template-columns: auto auto auto;
   align-items: stretch;
@@ -328,10 +361,44 @@ button:disabled {
 }
 
 .board__cell--playable {
-  outline: 2px solid gold;
-  outline-offset: 1px;
-  border-radius: 0.3em;
   cursor: pointer;
+  /* Lifts the ring and its glow clear of the neighbouring cells' cards. */
+  z-index: 2;
+}
+
+/*
+ * A legal square gets a thick gold ring, a warm wash over the card face and an outer glow. The
+ * wash is what actually carries at a glance - a ring alone disappears against ten rows of white
+ * cards. Kept light enough that the rank and suit underneath stay readable.
+ */
+.board__cell--playable::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--cell-w) * -0.055);
+  border-radius: calc(var(--cell-w) * 0.12);
+  border: calc(var(--cell-w) * 0.11) solid #ffc21a;
+  background: rgba(255, 193, 7, 0.28);
+  box-shadow:
+    0 0 calc(var(--cell-w) * 0.45) rgba(255, 190, 0, 0.8),
+    inset 0 0 0 1px rgba(80, 45, 0, 0.45);
+  pointer-events: none;
+  animation: playable-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes playable-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__cell--playable::after {
+    animation: none;
+  }
 }
 
 .board__wild {
@@ -450,12 +517,23 @@ button:disabled {
   font-size: var(--card-font, 11px);
   display: grid;
   place-items: center;
-  /* Domed plastic: a bright rim on top, shadow underneath, and a cast shadow on the card. */
+  /* Shading is tinted per colour, so a chip's own hue survives into its shadows instead of
+     being greyed out towards black. */
+  --chip-shade: rgba(0, 0, 0, 0.45);
+  --chip-groove: rgba(0, 0, 0, 0.22);
+  --chip-emblem: rgba(0, 0, 0, 0.32);
+  /* Domed plastic: a bright rim on top and shadow underneath. The pale collar and dark halo
+     outside it are what hold the chip apart from the printed card it sits on - without them a
+     red chip vanishes into a card full of red pips. */
   box-shadow:
     inset 0 0.11em 0.14em rgba(255, 255, 255, 0.45),
-    inset 0 -0.13em 0.16em rgba(0, 0, 0, 0.45),
+    inset 0 -0.13em 0.16em var(--chip-shade),
     inset 0 0 0 0.1em rgba(255, 255, 255, 0.16),
-    0 0.09em 0.16em rgba(0, 0, 0, 0.55);
+    0 0 0 0.08em rgba(255, 255, 255, 0.92),
+    0 0 0 0.15em rgba(18, 14, 16, 0.62),
+    /* Cast onto the card below, offset far enough to clear the halo above - this is what makes
+       the chip read as a piece resting on the board rather than something printed on it. */
+    0 0.24em 0.3em rgba(0, 0, 0, 0.45);
 }
 
 /* Raised ring pressed into the plastic just inside the rim. */
@@ -464,7 +542,7 @@ button:disabled {
   position: absolute;
   inset: 11%;
   border-radius: 50%;
-  border: 0.07em solid rgba(0, 0, 0, 0.22);
+  border: 0.07em solid var(--chip-groove);
   box-shadow: 0 -0.05em 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -476,7 +554,7 @@ button:disabled {
   font-size: 0.9em;
   line-height: 0.95;
   /* Same colour as the chip, shaped only by the light — like a moulded emblem. */
-  color: rgba(0, 0, 0, 0.32);
+  color: var(--chip-emblem);
   text-shadow: 0 0.07em 0 rgba(255, 255, 255, 0.35);
 }
 
@@ -484,13 +562,45 @@ button:disabled {
   background: radial-gradient(circle at 34% 27%, #4b5cc0 0%, #2c3a8e 55%, #1b2560 100%);
 }
 
+/* Brighter and more orange-leaning than the #d1121a ink the cards are printed in, so the two
+   reds read as different objects rather than one flat patch of colour. */
 .chip--red {
-  background: radial-gradient(circle at 34% 27%, #f4595f 0%, #dc2a35 55%, #9e131d 100%);
+  --chip-shade: rgba(124, 8, 20, 0.6);
+  --chip-groove: rgba(112, 10, 20, 0.32);
+  --chip-emblem: rgba(116, 6, 16, 0.42);
+  background: radial-gradient(circle at 34% 27%, #ff7d72 0%, #ee2130 52%, #b8101f 100%);
 }
 
 .chip--sequenced {
   outline: 0.14em solid gold;
   outline-offset: -0.14em;
+}
+
+/*
+ * The chip played most recently floats just above its square until the next one lands, which is
+ * how you spot the opponent's move without being told. The shadow travels with it - lengthening
+ * and softening as the chip rises - since a lift with a fixed shadow reads as a flat slide.
+ */
+.chip--latest {
+  animation: chip-hover 1.7s ease-in-out infinite;
+}
+
+@keyframes chip-hover {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0.06em 0.06em rgba(0, 0, 0, 0.4));
+  }
+  50% {
+    transform: translateY(-14%);
+    filter: drop-shadow(0 0.3em 0.2em rgba(0, 0, 0, 0.35));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip--latest {
+    animation: none;
+  }
 }
 
 .hand {
