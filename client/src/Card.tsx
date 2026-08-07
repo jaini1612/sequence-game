@@ -1,9 +1,11 @@
 import type { CardCode } from '@sequence/shared';
-import { CourtArt } from './CourtArt';
+import { useCardSprite } from './cardSprite';
 
-const SUIT_SYMBOL: Record<string, string> = { D: '♦', H: '♥', C: '♣', S: '♠' };
 const RED_SUITS = new Set(['D', 'H']);
 const COURT_RANKS = new Set(['J', 'Q', 'K']);
+
+/** The pip symbols are 60 wide by 76.5 tall - the sheet's 60x90 with 15% taken off the height. */
+const PIP_VIEWBOX = '0 0 60 76.5';
 
 /** A pip's position on the card face, in % of the pip area, and whether it is printed upside-down. */
 type Pip = { x: number; y: number; flip?: boolean };
@@ -62,9 +64,24 @@ const PIP_LAYOUTS: Record<string, Pip[]> = {
 };
 
 function parseCard(code: CardCode): { rank: string; suit: string } {
-  const suit = code.slice(-1);
-  const rank = code.slice(0, -1);
-  return { rank, suit };
+  return { rank: code.slice(0, -1), suit: code.slice(-1) };
+}
+
+/** One suit pip drawn from the sprite, so its shape never depends on the available fonts. */
+function SuitPip({
+  suit,
+  className = '',
+  style,
+}: {
+  suit: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <svg className={`suit ${className}`.trim()} viewBox={PIP_VIEWBOX} style={style} aria-hidden="true">
+      <use href={`#pip-${suit}`} />
+    </svg>
+  );
 }
 
 export function Card({
@@ -80,9 +97,10 @@ export function Card({
   dead?: boolean;
   onClick?: () => void;
 }) {
+  const spriteReady = useCardSprite();
   const { rank, suit } = parseCard(code);
   const isRed = RED_SUITS.has(suit);
-  const symbol = SUIT_SYMBOL[suit];
+  const isCourt = COURT_RANKS.has(rank);
   const className = [
     'card',
     isRed ? 'card--red' : 'card--black',
@@ -95,35 +113,51 @@ export function Card({
 
   const index = (corner: 'tl' | 'br') => (
     <span className={`card__index card__index--${corner}`} aria-hidden="true">
-      <span className="card__index-rank">{rank}</span>
-      <span className="card__index-suit">{symbol}</span>
+      {/* "10" is the only two-character rank, and it needs to be set narrower to stay in its column. */}
+      <span className={`card__index-rank ${rank.length > 1 ? 'card__index-rank--double' : ''}`.trim()}>
+        {rank}
+      </span>
+      <SuitPip suit={suit} className="card__index-suit" />
     </span>
   );
 
-  let body;
-  if (COURT_RANKS.has(rank)) {
-    body = <CourtArt rank={rank as 'J' | 'Q' | 'K'} ink={isRed ? '#d1121a' : '#1a1a1a'} suit={symbol} />;
-  } else if (rank === 'A') {
-    body = <span className="card__pip card__pip--ace">{symbol}</span>;
-  } else {
-    body = PIP_LAYOUTS[rank].map((p, i) => (
-      <span
+  // Court cards are the engraved faces straight from the deck, complete with their own indices, so
+  // they replace the whole face rather than sitting inside it.
+  if (isCourt && spriteReady) {
+    const art = (
+      <svg className="card__face card__face--court" viewBox="0 0 359 539" aria-hidden="true">
+        <use href={`#face-${rank}${suit}`} />
+      </svg>
+    );
+    return onClick ? (
+      <button type="button" className={className} onClick={onClick} aria-label={code}>
+        {art}
+      </button>
+    ) : (
+      <div className={className}>{art}</div>
+    );
+  }
+
+  const body = isCourt ? (
+    // Until the sprite arrives, a court card shows its rank and one large pip rather than a blank.
+    <SuitPip suit={suit} className="card__pip card__pip--centre" />
+  ) : rank === 'A' ? (
+    <SuitPip suit={suit} className="card__pip card__pip--ace" />
+  ) : (
+    PIP_LAYOUTS[rank].map((p, i) => (
+      <SuitPip
         key={i}
+        suit={suit}
         className={['card__pip', p.flip ? 'card__pip--flip' : ''].filter(Boolean).join(' ')}
         style={{ left: `${p.x}%`, top: `${p.y}%` }}
-      >
-        {symbol}
-      </span>
-    ));
-  }
+      />
+    ))
+  );
 
   const face = (
     <>
       {index('tl')}
-      <span
-        className={['card__face', COURT_RANKS.has(rank) ? 'card__face--court' : ''].filter(Boolean).join(' ')}
-        aria-hidden="true"
-      >
+      <span className="card__face" aria-hidden="true">
         {body}
       </span>
       {index('br')}

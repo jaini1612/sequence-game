@@ -179,6 +179,97 @@
   font-size: 0.85rem;
 }
 
+.lobby__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.65rem;
+  color: rgba(143, 212, 187, 0.7);
+}
+
+.lobby__secondary {
+  width: 100%;
+  padding: 0.55rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(214, 222, 200, 0.35);
+  color: #fdf6e3;
+}
+
+/* Segmented pickers for team count, player count and colour. */
+.picker {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.seg {
+  flex: 1;
+  padding: 0.45rem 0;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(214, 222, 200, 0.28);
+  color: #fdf6e3;
+  font-weight: 700;
+}
+
+.seg--on {
+  background: linear-gradient(#f7d24a, #e0a80f);
+  border-color: #a97d08;
+  color: #111;
+}
+
+/* Counts that need team play carry no strike-through - just clearly out of reach. */
+.seg:disabled {
+  opacity: 0.32;
+}
+
+.picker--colors {
+  gap: 0.55rem;
+}
+
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(214, 222, 200, 0.22);
+  border-radius: 50%;
+  flex: none;
+}
+
+.swatch .chip {
+  position: relative;
+  width: 2rem;
+  font-size: 0.8rem;
+}
+
+.swatch--on {
+  border-color: #f7d24a;
+  box-shadow: 0 0 0 2px rgba(247, 210, 74, 0.55);
+}
+
+.claim__seated {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.claim__seated li,
+.waiting__players li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.claim__seated .chip,
+.waiting__players .chip {
+  position: relative;
+  width: 1.5rem;
+  font-size: 0.55rem;
+  flex: none;
+}
+
 button {
   background: #f5c518;
   color: #111;
@@ -209,47 +300,180 @@ button:disabled {
 .waiting__players {
   list-style: none;
   padding: 0;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.waiting__player--away em {
+  font-size: 0.7rem;
+  color: #f7d24a;
+}
+
+.waiting__player--empty {
+  opacity: 0.5;
+}
+
+/* Dashed disc standing in for a chip nobody has claimed yet. */
+.waiting__slot {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  flex: none;
 }
 
 .game {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
 }
 
+/*
+ * One row: a chip per player carrying their sequence count, then whose turn it is. The old labelled
+ * tiles took a third of a phone screen to say what a coloured disc says at a glance.
+ */
 .hud {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 640px;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.hud__player {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+/* Roomy enough that the gold turn ring on one chip does not crowd the next one. */
+.hud__seats {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
 }
 
-.hud__player--blue {
-  border-left: 4px solid #3b82f6;
+.seat {
+  display: flex;
+  align-items: center;
 }
 
-.hud__player--red {
-  border-left: 4px solid #ef4444;
+.seat__chip.chip {
+  /* Overrides the board chip's absolute positioning, which would take it out of this row. */
+  position: relative;
+  width: 1.7rem;
+  font-size: 0.62rem;
+  flex: none;
 }
 
-.hud__label {
-  font-size: 0.75rem;
-  opacity: 0.7;
+/* The count replaces the moulded emblem, so it has to sit above the chip's inner shading. */
+.seat__count {
+  position: relative;
+  z-index: 1;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
 
-.hud__turn {
-  align-self: center;
-  font-weight: bold;
+/* Whoever is on turn gets a ring, so a three-way game does not need reading to follow. */
+.seat--active .seat__chip.chip {
+  outline: 2px solid #f7d24a;
+  outline-offset: 2px;
+}
+
+/*
+ * The Jack refereeing the game. A round badge cropped from the real card, and the anchor his
+ * speech bubble hangs off, so anything he says visibly comes from him.
+ */
+.referee {
+  position: relative;
+  flex: none;
+}
+
+.referee__badge {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  border: 2px solid rgba(247, 210, 74, 0.55);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.referee__badge--talking {
+  border-color: #f7d24a;
+  box-shadow:
+    0 0 0 3px rgba(247, 210, 74, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+/* Mirrored so he looks left across the board, not out over the right edge of the screen. */
+.referee__art {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: scaleX(-1);
+}
+
+.referee__fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-weight: 800;
+  color: #111;
+}
+
+/*
+ * Hangs below and to the left of the badge, since the badge sits hard against the right edge.
+ * Absolute, so a message never reflows the board.
+ */
+.referee__bubble {
+  position: absolute;
+  top: calc(2.4rem + 0.55rem);
+  right: 0;
+  z-index: 6;
+  width: max-content;
+  max-width: 13rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(247, 210, 74, 0.5);
+  background: linear-gradient(#3a2a08, #241a04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: rgba(242, 242, 242, 0.92);
+  cursor: pointer;
+  animation: bubble-in 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* The tail, pointing back up at the badge. */
+.referee__bubble::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 0.9rem;
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: #3a2a08;
+  border-left: 1px solid rgba(247, 210, 74, 0.5);
+  border-top: 1px solid rgba(247, 210, 74, 0.5);
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.96);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .win-banner {
@@ -275,40 +499,161 @@ button:disabled {
   margin: 0;
 }
 
-/* The board with its discard pile alongside. */
+/*
+ * The board takes the full width it can get and the hand sits underneath it, with the discard pile
+ * tucked into the bottom-right corner beside the hand. The board frame measures 13.3 cells across
+ * (ten cells, their gaps, the padding, the edge band and the two wordmarks), so that divisor is
+ * what turns the available width into a cell size.
+ */
 .game__table {
-  /* Cell width drives every measurement in here, so board and pile scale as one unit. The board
-     frame is 13.3 cells wide and the pile column another 1.65, hence the divisor of 15. */
-  --cell-w: clamp(18px, min(calc((100vw - 2.2rem) / 15), 4.9vh), 52px);
+  --cell-w: clamp(16px, min(calc((100vw - 1.6rem) / 13.3), 4.4vh), 52px);
   --card-font: calc(var(--cell-w) * 0.235);
-  display: flex;
-  align-items: center;
-  gap: calc(var(--cell-w) * 0.4);
-}
-
-.discard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: calc(var(--cell-w) * 0.2);
-  width: calc(var(--cell-w) * 1.25);
+  gap: 0.6rem;
+  width: 100%;
 }
 
+/* Hand on the left taking the slack, discard pile pinned to the right. */
+.game__tray {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: calc(var(--cell-w) * 13.3);
+}
+
+/* Draw pile on the left, discard on the right, both pinned to the end of the tray. */
+.game__piles {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex: none;
+}
+
+.discard,
+.draw {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  flex: none;
+  width: calc(var(--hand-card-w) * var(--pile-scale));
+}
+
+/* The stack of backs. Padding-based aspect keeps it identical to the discard slot's 2:3. */
+.draw__pile {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: default;
+}
+
+.draw__pile:disabled {
+  /* The base rule dims disabled buttons, but a locked pile still has to look like a pile. */
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Woven diamond back, in the deep red the printed deck uses. */
+.draw__back {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  background-color: #9e1b26;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.22) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 5px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Offsets so the stack has visible depth without a wrapper per layer. */
+.draw__back--under1 {
+  transform: translate(1.5px, 1.5px);
+}
+
+.draw__back--under2 {
+  transform: translate(3px, 3px);
+}
+
+.draw__count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/*
+ * Yours to take - and it looks no different for it. No ring, no pulse, no countdown: remembering
+ * to draw is the player's job, and anything that drew the eye here would take that mistake off the
+ * table entirely. The cursor is the only tell, and phones do not have one.
+ */
+.draw__pile--ready {
+  cursor: pointer;
+}
+
+/* The one state worth showing, because it is a rule the player cannot act on: another player is
+   owed an older card, so the pile is not theirs to take yet. */
+.draw__pile--locked {
+  filter: grayscale(0.65) brightness(0.7);
+}
+
+.draw__pile--empty > .draw__back {
+  background: rgba(255, 255, 255, 0.07);
+  background-image: none;
+  border-style: dashed;
+}
+
+/*
+ * The card leaving the pile: it slides left towards the hand, tilting and fading as it goes. The
+ * hand always sits to the left of the piles, so a fixed direction is enough.
+ */
+.draw__fly {
+  animation: draw-flight 380ms cubic-bezier(0.3, 0, 0.5, 1) forwards;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes draw-flight {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-260%, -18%) rotate(-14deg) scale(0.82);
+    opacity: 0;
+  }
+}
+
+
+/* Both piles are only about a fifth of the tray wide, so these have to be very short words or the
+   two captions run into each other. */
 .discard__label {
-  font-size: calc(var(--cell-w) * 0.22);
-  letter-spacing: 0.06em;
+  font-size: 0.48rem;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: rgba(242, 242, 242, 0.65);
+  color: rgba(242, 242, 242, 0.6);
 }
 
 /* Sized here rather than on the card, since the slot also has to show when the pile is empty. */
 .discard__slot {
   width: 100%;
-  aspect-ratio: 5 / 7;
-  border-radius: calc(var(--cell-w) * 0.07);
+  aspect-ratio: 2 / 3;
+  border-radius: 3px;
   border: 1px dashed rgba(255, 255, 255, 0.22);
-  box-shadow: 0 calc(var(--cell-w) * 0.06) calc(var(--cell-w) * 0.14) rgba(0, 0, 0, 0.45);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
 }
 
 /* Printed board edge: a thick band carrying the wordmark down both sides. */
@@ -346,10 +691,11 @@ button:disabled {
   transform: rotate(180deg);
 }
 
+/* 1.5 is the real deck's proportion (359 x 539), which the court-card art is drawn to. */
 .board {
   display: grid;
   grid-template-columns: repeat(10, var(--cell-w));
-  grid-template-rows: repeat(10, calc(var(--cell-w) * 1.4));
+  grid-template-rows: repeat(10, calc(var(--cell-w) * 1.5));
   gap: calc(var(--cell-w) * 0.09);
 }
 
@@ -360,10 +706,13 @@ button:disabled {
   justify-content: center;
 }
 
-.board__cell--playable {
-  cursor: pointer;
+.board__cell--highlighted {
   /* Lifts the ring and its glow clear of the neighbouring cells' cards. */
   z-index: 2;
+}
+
+.board__cell--playable {
+  cursor: pointer;
 }
 
 /*
@@ -371,7 +720,7 @@ button:disabled {
  * wash is what actually carries at a glance - a ring alone disappears against ten rows of white
  * cards. Kept light enough that the rank and suit underneath stay readable.
  */
-.board__cell--playable::after {
+.board__cell--highlighted::after {
   content: '';
   position: absolute;
   inset: calc(var(--cell-w) * -0.055);
@@ -396,7 +745,7 @@ button:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .board__cell--playable::after {
+  .board__cell--highlighted::after {
     animation: none;
   }
 }
@@ -421,6 +770,9 @@ button:disabled {
   background: #fff;
   border-radius: 0.3em;
   font-size: var(--card-font, 11px);
+  /* A <button> does not inherit font-family from :root, so without this the rank switched between
+     Arial and system-ui as a card moved between clickable and not. */
+  font-family: inherit;
   font-weight: 700;
   line-height: 1;
   padding: 0;
@@ -457,32 +809,62 @@ button:disabled {
 }
 
 .card__index--tl {
-  top: 4%;
-  left: 5%;
+  top: 3%;
+  left: 4%;
 }
 
 .card__index--br {
-  bottom: 4%;
-  right: 5%;
+  bottom: 3%;
+  right: 4%;
   transform: rotate(180deg);
 }
 
-.card__index-suit {
+/*
+ * The rank sits in a narrow corner column, as it does on a printed card. At full size a two-digit
+ * "10" is over twice as wide as any other rank and ran straight into the first column of pips, so
+ * it is set smaller and tighter - which is also how real decks handle it.
+ */
+.card__index-rank {
   font-size: 0.85em;
 }
 
-.card__face {
-  position: absolute;
-  top: 7%;
-  bottom: 7%;
-  left: 21%;
-  right: 11%;
+.card__index-rank--double {
+  font-size: 0.6em;
+  letter-spacing: -0.04em;
 }
 
+/* Suit pips come from the deck sprite, so their shape no longer depends on the available fonts -
+   which is what used to make them jump between sizes as a card switched between button and div. */
+.suit {
+  display: block;
+  fill: currentColor;
+}
+
+.card__index-suit {
+  width: 0.45em;
+  height: auto;
+}
+
+/* Inset enough that the outer pip columns clear the corner indices on both diagonals, and centred
+   so the pip block sits square on the card. */
+.card__face {
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  left: 21%;
+  right: 21%;
+}
+
+/*
+ * A pip is 1.27x taller than it is wide, and the ten packs its rows only 13% of the panel apart, so
+ * the width has to stay under about an eighth of the card or consecutive rows touch. 0.52em leaves
+ * a couple of pixels of daylight between rows at every size.
+ */
 .card__pip {
   position: absolute;
   transform: translate(-50%, -50%);
-  font-size: 1.05em;
+  width: 0.52em;
+  height: auto;
 }
 
 .card__pip--flip {
@@ -492,21 +874,23 @@ button:disabled {
 .card__pip--ace {
   left: 50%;
   top: 50%;
-  font-size: 2.6em;
+  width: 1.5em;
 }
 
-/* Court cards get illustrated art, so their panel runs closer to the card edges. */
+/* Stand-in for a court card while the sprite is still loading. */
+.card__pip--centre {
+  left: 50%;
+  top: 50%;
+  width: 1.1em;
+}
+
+/* The court faces are complete cards in the sprite - border and indices included - so they fill
+   the whole slot rather than sitting in the inner panel the pip layouts use. */
 .card__face--court {
-  top: 4%;
-  bottom: 4%;
-  left: 17%;
-  right: 7%;
-}
-
-.card__art {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  display: block;
 }
 
 .chip {
@@ -522,28 +906,34 @@ button:disabled {
   --chip-shade: rgba(0, 0, 0, 0.45);
   --chip-groove: rgba(0, 0, 0, 0.22);
   --chip-emblem: rgba(0, 0, 0, 0.32);
-  /* Domed plastic: a bright rim on top and shadow underneath. The pale collar and dark halo
-     outside it are what hold the chip apart from the printed card it sits on - without them a
-     red chip vanishes into a card full of red pips. */
+  /*
+   * Domed plastic: a bright rim on top and shadow underneath, both soft-edged so they survive
+   * being drawn at 20-odd pixels on a phone.
+   *
+   * There is deliberately no pale ring around the outside any more. At board size it worked out
+   * to about half a pixel and rendered as a grey smudge rather than a highlight. A single dark
+   * ring does the same job of holding the chip apart from the card, and reads cleanly at 1px
+   * because it is dark against white.
+   */
   box-shadow:
     inset 0 0.11em 0.14em rgba(255, 255, 255, 0.45),
     inset 0 -0.13em 0.16em var(--chip-shade),
-    inset 0 0 0 0.1em rgba(255, 255, 255, 0.16),
-    0 0 0 0.08em rgba(255, 255, 255, 0.92),
-    0 0 0 0.15em rgba(18, 14, 16, 0.62),
-    /* Cast onto the card below, offset far enough to clear the halo above - this is what makes
+    /* max() keeps it a whole pixel on the board, where 0.1em works out under two thirds of one and
+       would land as a grey smudge, while still scaling up on the larger cards in hand. */
+    0 0 0 max(1px, 0.09em) rgba(18, 14, 16, 0.6),
+    /* Cast onto the card below, offset far enough to clear the ring above - this is what makes
        the chip read as a piece resting on the board rather than something printed on it. */
     0 0.24em 0.3em rgba(0, 0, 0, 0.45);
 }
 
-/* Raised ring pressed into the plastic just inside the rim. */
+/* Ring pressed into the plastic just inside the rim. The white highlight that used to sit above it
+   was a 0.05em hairline - invisible at best, dirty at worst - so only the groove itself is left. */
 .chip::before {
   content: '';
   position: absolute;
   inset: 11%;
   border-radius: 50%;
-  border: 0.07em solid var(--chip-groove);
-  box-shadow: 0 -0.05em 0 rgba(255, 255, 255, 0.3);
+  border: max(1px, 0.07em) solid var(--chip-groove);
 }
 
 .chip__emblem {
@@ -569,6 +959,14 @@ button:disabled {
   --chip-groove: rgba(112, 10, 20, 0.32);
   --chip-emblem: rgba(116, 6, 16, 0.42);
   background: radial-gradient(circle at 34% 27%, #ff7d72 0%, #ee2130 52%, #b8101f 100%);
+}
+
+/* The third set. Pushed towards the yellow side of green to stay clear of the felt underneath. */
+.chip--green {
+  --chip-shade: rgba(8, 62, 26, 0.6);
+  --chip-groove: rgba(10, 58, 26, 0.32);
+  --chip-emblem: rgba(6, 54, 22, 0.42);
+  background: radial-gradient(circle at 34% 27%, #7ee87a 0%, #23a83f 52%, #0f7a2a 100%);
 }
 
 .chip--sequenced {
@@ -603,28 +1001,75 @@ button:disabled {
   }
 }
 
+/*
+ * The hand stays on a single line and shares the row with the discard pile, so the cards are sized
+ * from whatever width is left rather than from a fixed number: seven cards plus their gaps have to
+ * fit in the tray minus the pile's column.
+ */
+.game__table {
+  --hand-cards: 7;
+  --hand-gap: 0.28rem;
+  /* The two piles are kept a little narrower than a hand card, since nothing has to be read on
+     them - that buys the hand back some width on a phone. */
+  --pile-scale: 0.8;
+  --hand-card-w: clamp(
+    24px,
+    calc(
+      (var(--cell-w) * 13.3 - var(--hand-gap) * (var(--hand-cards) + 3)) /
+        (var(--hand-cards) + 2 * var(--pile-scale))
+    ),
+    58px
+  );
+}
+
 .hand {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: var(--hand-gap);
+  justify-content: flex-start;
+  align-items: flex-end;
+  min-width: 0;
 }
 
 .hand__slot {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.15rem;
+  /* Stops a drag from scrolling the page on a touch screen. */
+  touch-action: none;
 }
 
 .hand__slot .card {
-  --card-font: 12px;
-  width: 52px;
-  height: 73px;
+  --card-font: calc(var(--hand-card-w) * 0.235);
+  width: var(--hand-card-w);
+  aspect-ratio: 2 / 3;
+  height: auto;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease;
+}
+
+/* Lifts the card under the finger and opens a gap where it would land. */
+.hand__slot--dragging {
+  z-index: 3;
+  opacity: 0.85;
+}
+
+.hand__slot--dragging .card {
+  transform: translateY(-14%) scale(1.06);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.55);
+}
+
+.hand__slot--drop .card {
+  transform: translateY(-6%);
+  outline: 2px dashed rgba(247, 210, 74, 0.8);
+  outline-offset: 2px;
 }
 
 .hand__discard {
-  font-size: 0.65rem;
-  padding: 0.2rem 0.4rem;
+  position: absolute;
+  bottom: -0.15rem;
+  font-size: 0.5rem;
+  padding: 0.1rem 0.25rem;
+  white-space: nowrap;
 }

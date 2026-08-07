@@ -1,9 +1,10 @@
 import { WILD, type PlayerView, type Position } from '@sequence/shared';
 import { Card } from './Card';
+import { Chip } from './Chip';
 import { CornerTile } from './CornerTile';
 
-function isPlayable(playable: Position[], row: number, col: number): boolean {
-  return playable.some((p) => p.row === row && p.col === col);
+function contains(cells: Position[], row: number, col: number): boolean {
+  return cells.some((p) => p.row === row && p.col === col);
 }
 
 function isInSequence(view: PlayerView, row: number, col: number): boolean {
@@ -12,11 +13,15 @@ function isInSequence(view: PlayerView, row: number, col: number): boolean {
 
 export function Board({
   view,
-  playableCells,
+  highlightedCells,
+  canPlay,
   onCellClick,
 }: {
   view: PlayerView;
-  playableCells: Position[];
+  /** Where the selected card could go. Shown off-turn too, as a planning aid. */
+  highlightedCells: Position[];
+  /** False off-turn or after the game ends: cells still light up, but clicking does nothing. */
+  canPlay: boolean;
   onCellClick: (pos: Position) => void;
 }) {
   return (
@@ -26,46 +31,41 @@ export function Board({
       </span>
       <div className="board">
         {view.board.map((row, rowIdx) =>
-        row.map((cell, colIdx) => {
-          const chip = view.chips[rowIdx][colIdx];
-          const clickable = isPlayable(playableCells, rowIdx, colIdx);
-          const sequenced = isInSequence(view, rowIdx, colIdx);
-          const latest = view.lastPlacement?.row === rowIdx && view.lastPlacement?.col === colIdx;
+          row.map((cell, colIdx) => {
+            const chip = view.chips[rowIdx][colIdx];
+            const highlighted = contains(highlightedCells, rowIdx, colIdx);
+            const sequenced = isInSequence(view, rowIdx, colIdx);
+            const latest = view.lastPlacement?.row === rowIdx && view.lastPlacement?.col === colIdx;
 
-          return (
-            <div
-              key={`${rowIdx}-${colIdx}`}
-              className={['board__cell', clickable ? 'board__cell--playable' : ''].join(' ')}
-              onClick={clickable ? () => onCellClick({ row: rowIdx, col: colIdx }) : undefined}
-            >
-              {cell === WILD ? (
-                <div className="board__wild" aria-label="Free corner">
-                  <CornerTile />
-                </div>
-              ) : (
-                <Card code={cell} />
-              )}
-              {chip && (
-                <div
-                  className={[
-                    'chip',
-                    `chip--${chip.toLowerCase()}`,
-                    sequenced ? 'chip--sequenced' : '',
-                    latest ? 'chip--latest' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  <span className="chip__emblem" aria-hidden="true">
-                    <span>♥</span>
-                    <span>♠</span>
-                    <span>♦</span>
-                    <span>♣</span>
-                  </span>
-                </div>
-              )}
-            </div>
-          );
+            return (
+              <div
+                key={`${rowIdx}-${colIdx}`}
+                className={[
+                  'board__cell',
+                  highlighted ? 'board__cell--highlighted' : '',
+                  highlighted && canPlay ? 'board__cell--playable' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={highlighted ? () => onCellClick({ row: rowIdx, col: colIdx }) : undefined}
+              >
+                {cell === WILD ? (
+                  <div className="board__wild" aria-label="Free corner">
+                    <CornerTile />
+                  </div>
+                ) : (
+                  <Card code={cell} />
+                )}
+                {chip && (
+                  <Chip
+                    color={chip}
+                    className={[sequenced ? 'chip--sequenced' : '', latest ? 'chip--latest' : '']
+                      .filter(Boolean)
+                      .join(' ')}
+                  />
+                )}
+              </div>
+            );
           }),
         )}
       </div>

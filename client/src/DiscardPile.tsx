@@ -7,7 +7,8 @@ export function DiscardPile({ view }: { view: PlayerView }) {
 
   return (
     <div className="discard">
-      <span className="discard__label">Discard</span>
+      {/* "Last" rather than "Discard": it is the last card played, and it has to fit a narrow column. */}
+      <span className="discard__label">Last</span>
       <div className="discard__slot" aria-label={topCard ? `Last card played: ${topCard}` : 'Discard pile empty'}>
         {topCard && <Card code={topCard} />}
       </div>

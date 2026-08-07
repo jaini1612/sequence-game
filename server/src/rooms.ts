@@ -1,9 +1,15 @@
-import { GameState } from '@sequence/shared';
+import {
+  colorsForPlayerCount,
+  GameState,
+  PLAYABLE_PLAYER_COUNTS,
+  type PlayerColor,
+} from '@sequence/shared';
 import { generateRoomCode } from './roomCode.js';
 
 export interface RoomPlayer {
   id: string;
   name: string;
+  color: PlayerColor;
   socketId: string;
   connected: boolean;
 }
@@ -13,11 +19,20 @@ export type RoomStatus = 'waiting' | 'playing' | 'finished';
 export interface Room {
   code: string;
   status: RoomStatus;
+  /** How many sides are playing. One player per side until team play lands, so this equals size. */
+  teams: number;
+  /** How many players the room waits for before dealing. */
+  size: number;
   players: RoomPlayer[];
   game: GameState | null;
 }
 
-const MAX_PLAYERS = 2;
+export interface RoomConfig {
+  teams: number;
+  size: number;
+  color: PlayerColor;
+}
+
 /** How long a fully-abandoned room is held open so a refresh or network blip can reclaim it. */
 const ABANDONED_ROOM_GRACE_MS = 120_000;
 
@@ -25,33 +40,50 @@ export class RoomManager {
   private rooms = new Map<string, Room>();
   private cleanupTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  createRoom(hostName: string, playerId: string, socketId: string): Room {
+  createRoom(hostName: string, playerId: string, socketId: string, config: RoomConfig): Room {
+    // The client offers the larger counts greyed out, but never trust it to enforce that.
+    if (!PLAYABLE_PLAYER_COUNTS.includes(config.size)) {
+      throw new Error(`Only ${PLAYABLE_PLAYER_COUNTS.join(' or ')} players are supported for now`);
+    }
+    if (config.teams !== config.size) throw new Error('Team games are not supported yet');
+    if (!colorsForPlayerCount(config.size).includes(config.color)) {
+      throw new Error('That colour is not available in a game this size');
+    }
+
     let code = generateRoomCode();
     while (this.rooms.has(code)) code = generateRoomCode();
 
     const room: Room = {
       code,
       status: 'waiting',
-      players: [{ id: playerId, name: hostName, socketId, connected: true }],
+      teams: config.teams,
+      size: config.size,
+      players: [{ id: playerId, name: hostName, color: config.color, socketId, connected: true }],
       game: null,
     };
     this.rooms.set(code, room);
     return room;
   }
 
-  joinRoom(code: string, name: string, playerId: string, socketId: string): Room {
+  joinRoom(code: string, name: string, playerId: string, socketId: string, color: PlayerColor): Room {
     const room = this.rooms.get(code.toUpperCase());
     if (!room) throw new Error('Room not found');
     if (room.status !== 'waiting') throw new Error('Room is not accepting new players');
-    if (room.players.length >= MAX_PLAYERS) throw new Error('Room is full');
+    if (room.players.length >= room.size) throw new Error('Room is full');
     // Seating the same identity twice would leave the game unable to resolve an opponent, so
     // reject it loudly rather than creating a room that can never start.
     if (room.players.some((p) => p.id === playerId)) {
       throw new Error('You are already in this room in another tab');
     }
+    if (!this.availableColors(room).includes(color)) throw new Error('That colour is already taken');
 
-    room.players.push({ id: playerId, name, socketId, connected: true });
+    room.players.push({ id: playerId, name, color, socketId, connected: true });
     return room;
+  }
+
+  availableColors(room: Room): PlayerColor[] {
+    const taken = new Set(room.players.map((p) => p.color));
+    return colorsForPlayerCount(room.size).filter((c) => !taken.has(c));
   }
 
   /**

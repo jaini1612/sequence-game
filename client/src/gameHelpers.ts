@@ -22,11 +22,12 @@ export function computePlayableCells(view: PlayerView, card: CardCode): Position
   }
 
   if (ONE_EYED_JACKS.includes(card)) {
+    // Any chip that is not yours is fair game, which in a three-way game means either opponent's.
     const cells: Position[] = [];
-    const opponentColor = view.opponent.color;
     for (let row = 0; row < view.chips.length; row++) {
       for (let col = 0; col < view.chips[row].length; col++) {
-        if (view.chips[row][col] === opponentColor && view.sequenceUse[row][col] === 0) {
+        const occupant = view.chips[row][col];
+        if (occupant && occupant !== view.you.color && view.sequenceUse[row][col] === 0) {
           cells.push({ row, col });
         }
       }

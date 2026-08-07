@@ -8,7 +8,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      // cards.svg carries every court-card face and suit pip, so the app is unusable without it -
+      // it belongs in the precache rather than being fetched on demand.
+      includeAssets: ['favicon.svg', 'cards.svg'],
       manifest: {
         name: 'Sequence',
         short_name: 'Sequence',
