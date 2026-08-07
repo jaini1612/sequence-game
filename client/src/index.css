@@ -11,17 +11,30 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
   /* Green felt table: lit from above, falling off towards the edges. */
   background:
     radial-gradient(ellipse 120% 80% at 50% 0%, rgba(255, 255, 255, 0.07), transparent 60%),
     radial-gradient(ellipse at 50% 40%, #1a5b43 0%, #0f3d2e 55%, #082018 100%);
 }
 
+/*
+ * dvh, not vh: on mobile Safari 100vh is the height with the toolbars hidden, which is taller than
+ * what you can actually see - so 100vh left the page scrollable with a band of empty felt at each
+ * end. dvh tracks the visible area, and vh stays as a fallback for browsers without it.
+ */
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: 1rem;
+}
+
+/*
+ * Centred with auto margins rather than align-items, because auto margins collapse to zero when the
+ * content is taller than the viewport. Flex centring would instead push the top of the board off
+ * the screen with no way to scroll back up to it.
+ */
+#root > * {
+  margin: auto;
 }
