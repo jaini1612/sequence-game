@@ -476,13 +476,123 @@ button:disabled {
   white-space: nowrap;
 }
 
-.win-banner {
-  font-size: 1.5rem;
-  font-weight: bold;
-  background: #f5c518;
-  color: #111;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+/*
+ * How the game ends, above the board. Deliberately compact: the board underneath is doing the
+ * celebrating, and on a phone every line here is height the board loses.
+ */
+.outcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  /* The board's own width is set from --cell-w, which only exists further down the tree, so this
+     just matches it closely enough to read as the same column. */
+  width: min(100%, 24rem);
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.outcome p {
+  margin: 0;
+}
+
+/* The payout marquee: gold on gold, with the lettering cycling through the lights. */
+.outcome--won {
+  border: 1px solid rgba(247, 210, 74, 0.6);
+  background: linear-gradient(#4a3506, #291d02);
+  box-shadow:
+    0 0 0 3px rgba(247, 210, 74, 0.12),
+    0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.outcome--won .outcome__headline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+/* Lights chasing through the letters, which is the whole reason this is a gradient and not a colour. */
+.outcome__word {
+  background: linear-gradient(90deg, #fff3b0, #ffc21a, #ff5a78, #7be3ff, #ffc21a, #fff3b0);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: jackpot-lights 2.4s linear infinite;
+}
+
+@keyframes jackpot-lights {
+  to {
+    background-position: 300% 0;
+  }
+}
+
+/* The other side of it: the taunt is the loudest thing on the screen, the result is a footnote. */
+.outcome--lost {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.3));
+}
+
+.outcome--lost .outcome__headline {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(242, 242, 242, 0.55);
+}
+
+/*
+ * One line, always. A taunt that wraps loses its timing, so the type scales with the viewport
+ * instead of the words scaling down to fit it.
+ */
+.outcome__line {
+  white-space: nowrap;
+}
+
+.outcome--lost .outcome__line {
+  font-size: clamp(0.78rem, 4.4vw, 1.15rem);
+  font-weight: 700;
+  color: #ffd9a8;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: taunt-in 420ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* Lands with a shove, the way a heckle does. */
+@keyframes taunt-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.94) rotate(-1.5deg);
+  }
+}
+
+.outcome--won .outcome__line {
+  font-size: 0.85rem;
+  color: rgba(255, 233, 170, 0.9);
+}
+
+.outcome__rematch {
+  padding: 0.35rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid rgba(247, 210, 74, 0.7);
+  background: linear-gradient(#f7d24a, #d9a51b);
+  color: #1b1403;
+  cursor: pointer;
+}
+
+/* Voted, and now waiting on the rest of the table - so it reads as a status, not a dead button. */
+.outcome__rematch:disabled {
+  opacity: 1;
+  cursor: default;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(242, 242, 242, 0.7);
 }
 
 .game__error {
@@ -658,6 +768,8 @@ button:disabled {
 
 /* Printed board edge: a thick band carrying the wordmark down both sides. */
 .board-frame {
+  /* Anchors the marquee lights, which are absolute so they stay out of this grid's flow. */
+  position: relative;
   display: grid;
   grid-template-columns: auto auto auto;
   align-items: stretch;
@@ -667,6 +779,65 @@ button:disabled {
   padding: calc(var(--cell-w) * 0.16);
   border-radius: calc(var(--cell-w) * 0.22);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+/*
+ * The board when the game has been won: the edge band cycles through colours and a string of bulbs
+ * chases round the outside of it, which is the bit that makes it read as a payout rather than just a
+ * glow.
+ */
+.board-frame--jackpot {
+  animation: jackpot-glow 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes jackpot-glow {
+  from {
+    box-shadow:
+      0 10px 26px rgba(0, 0, 0, 0.45),
+      0 0 32px rgba(247, 210, 74, 0.55);
+    border-color: #6b5407;
+  }
+  to {
+    box-shadow:
+      0 10px 26px rgba(0, 0, 0, 0.45),
+      0 0 46px rgba(123, 227, 255, 0.5);
+    border-color: #5a1030;
+  }
+}
+
+.board-frame--jackpot::before {
+  content: '';
+  position: absolute;
+  /* Sat out on the edge band itself, just inside the frame's outer corner. */
+  inset: calc(var(--cell-w) * -0.19);
+  border-radius: calc(var(--cell-w) * 0.34);
+  pointer-events: none;
+  z-index: 4;
+  /* One bulb, tiled four ways: along the top and bottom, then down each side. */
+  --bulb: radial-gradient(
+    circle at 3px 3px,
+    #fff6c4 0 1.4px,
+    #ffc21a 1.6px 2.7px,
+    rgba(255, 140, 0, 0.35) 2.9px,
+    transparent 3.2px
+  );
+  background-image: var(--bulb), var(--bulb), var(--bulb), var(--bulb);
+  background-size:
+    13px 6px,
+    13px 6px,
+    6px 13px,
+    6px 13px;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  animation: marquee-chase 520ms linear infinite;
+}
+
+/* One bulb spacing per cycle, in opposite directions on facing edges, so the lights run round the
+   perimeter rather than all sliding the same way. */
+@keyframes marquee-chase {
+  to {
+    background-position: 13px 0, -13px 100%, 0 -13px, 100% 13px;
+  }
 }
 
 .board-frame__wordmark {
@@ -893,6 +1064,15 @@ button:disabled {
   height: 100%;
 }
 
+/*
+ * A moulded plastic playing chip, seen from directly above the way a chip lying on a board actually
+ * is. It is a flat disc, not a dome: the whole face is one even colour and the shape comes entirely
+ * from bevels catching the light - a lit lip along the top-left of the rim, shadow along the
+ * bottom-right, and the reverse of that inside every recess.
+ *
+ * Everything is sized in percentages of the disc, so the same markup holds together from the 19px it
+ * gets on a phone board up to the 42px in the lobby.
+ */
 .chip {
   position: absolute;
   width: 72%;
@@ -904,69 +1084,174 @@ button:disabled {
   /* Shading is tinted per colour, so a chip's own hue survives into its shadows instead of
      being greyed out towards black. */
   --chip-shade: rgba(0, 0, 0, 0.45);
-  --chip-groove: rgba(0, 0, 0, 0.22);
   --chip-emblem: rgba(0, 0, 0, 0.32);
-  /*
-   * Domed plastic: a bright rim on top and shadow underneath, both soft-edged so they survive
-   * being drawn at 20-odd pixels on a phone.
-   *
-   * There is deliberately no pale ring around the outside any more. At board size it worked out
-   * to about half a pixel and rendered as a grey smudge rather than a highlight. A single dark
-   * ring does the same job of holding the chip apart from the card, and reads cleanly at 1px
-   * because it is dark against white.
-   */
+  background-color: var(--chip-base);
+  /* A flat surface catching light from the upper left. Kept to a whisper: any more contrast across
+     the face and the disc starts reading as a sphere again. */
+  background-image: linear-gradient(
+    158deg,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0) 46%,
+    rgba(0, 0, 0, 0.13)
+  );
   box-shadow:
-    inset 0 0.11em 0.14em rgba(255, 255, 255, 0.45),
-    inset 0 -0.13em 0.16em var(--chip-shade),
-    /* max() keeps it a whole pixel on the board, where 0.1em works out under two thirds of one and
-       would land as a grey smudge, while still scaling up on the larger cards in hand. */
-    0 0 0 max(1px, 0.09em) rgba(18, 14, 16, 0.6),
+    /* The flat lip round the edge: lit where it faces the light, shaded where it turns away. Kept
+       tight rather than soft - a wide, blurred highlight is what made this read as a dome. */
+    inset 0.025em 0.035em 0.03em rgba(255, 255, 255, 0.35),
+    inset -0.025em -0.035em 0.03em var(--chip-shade),
+    /* The moulded side wall of the disc. Tinted rather than neutral, so it reads as the chip's own
+       plastic turning away from the light instead of an outline drawn round it. max() keeps it a
+       whole pixel on the board, where 0.09em works out under two thirds of one. */
+    0 0 0 max(1px, 0.07em) var(--chip-edge),
     /* Cast onto the card below, offset far enough to clear the ring above - this is what makes
        the chip read as a piece resting on the board rather than something printed on it. */
     0 0.24em 0.3em rgba(0, 0, 0, 0.45);
 }
 
-/* Ring pressed into the plastic just inside the rim. The white highlight that used to sit above it
-   was a 0.05em hairline - invisible at best, dirty at worst - so only the groove itself is left. */
+/*
+ * The recessed face the suits sit in. A hollow is lit the opposite way round to a bump - the wall
+ * nearest the light is the one in shadow - which is the whole trick to it reading as pressed in.
+ */
 .chip::before {
   content: '';
   position: absolute;
-  inset: 11%;
+  inset: 16%;
   border-radius: 50%;
-  border: max(1px, 0.07em) solid var(--chip-groove);
+  background: rgba(0, 0, 0, 0.09);
+  box-shadow:
+    inset 0.04em 0.05em 0.04em var(--chip-shade),
+    inset -0.03em -0.035em 0.035em rgba(255, 255, 255, 0.22),
+    /* The ridge the face is sunk into, catching the light along its top edge. */
+    0 -0.015em 0 max(0.5px, 0.02em) rgba(255, 255, 255, 0.14);
 }
 
-.chip__emblem {
+/*
+ * The milled band round the rim: a ring of little raised bars, as on the printed chip. closest-side
+ * matters - a radial-gradient in a square box measures itself to the corner by default, which would
+ * put the whole annulus outside the disc.
+ */
+.chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.2) 0deg 2.6deg,
+    var(--chip-shade) 2.6deg 4.6deg,
+    transparent 4.6deg 13deg
+  );
+  mask: radial-gradient(circle closest-side, transparent 0 87%, #000 89% 96%, transparent 99%);
+  -webkit-mask: radial-gradient(circle closest-side, transparent 0 87%, #000 89% 96%, transparent 99%);
+}
+
+/* Sits above the recess: the four pockets and the boss in the middle of them. */
+.chip__face {
+  position: absolute;
+  inset: 16%;
+  /* The suits are sized from here, so one number moves all four at once. */
+  font-size: 0.62em;
+  line-height: 1;
+}
+
+/*
+ * A shallow pocket pressed into the face with its suit standing proud in the middle. Lit as a hollow
+ * like the face itself, and the suit is the chip's own colour darkened rather than a printed mark,
+ * because a moulded symbol has no ink on it - only a highlight along the bottom edge.
+ */
+.chip__pocket {
+  position: absolute;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   place-items: center;
-  gap: 0.05em;
-  font-size: 0.9em;
-  line-height: 0.95;
-  /* Same colour as the chip, shaped only by the light — like a moulded emblem. */
+  background: rgba(0, 0, 0, 0.11);
+  box-shadow:
+    inset 0.045em 0.055em 0.05em var(--chip-shade),
+    inset -0.03em -0.035em 0.04em rgba(255, 255, 255, 0.18);
   color: var(--chip-emblem);
-  text-shadow: 0 0.07em 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 0.07em 0 rgba(255, 255, 255, 0.3);
+}
+
+/*
+ * Teardrops, each rounder on its outer edge and flatter where it meets the boss in the middle. Sized
+ * so the raised ridges between them stay visible - the four running together into one clover is what
+ * the moulding is at pains to avoid.
+ */
+.chip__pocket--n,
+.chip__pocket--s {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 41%;
+  height: 38%;
+}
+
+.chip__pocket--e,
+.chip__pocket--w {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38%;
+  height: 41%;
+}
+
+.chip__pocket--n {
+  top: 0;
+  border-radius: 50% 50% 42% 42% / 60% 60% 40% 40%;
+}
+
+.chip__pocket--s {
+  bottom: 0;
+  border-radius: 42% 42% 50% 50% / 40% 40% 60% 60%;
+}
+
+.chip__pocket--w {
+  left: 0;
+  border-radius: 50% 42% 42% 50% / 50% 50% 50% 50%;
+}
+
+.chip__pocket--e {
+  right: 0;
+  border-radius: 42% 50% 50% 42%;
+}
+
+/* The boss in the middle, where the real chip carries the maker's mark - far too small to letter at
+   any size this gets drawn at, so it stays a plain raised disc. */
+.chip__hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 27%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  /* Painted last, so where the pockets taper in they run under it, as they do on the moulding. */
+  background: var(--chip-base);
+  box-shadow:
+    inset 0.02em 0.03em 0.03em rgba(255, 255, 255, 0.3),
+    inset -0.02em -0.03em 0.03em var(--chip-shade),
+    0 0 0 max(0.5px, 0.015em) var(--chip-shade);
 }
 
 .chip--blue {
-  background: radial-gradient(circle at 34% 27%, #4b5cc0 0%, #2c3a8e 55%, #1b2560 100%);
+  --chip-base: #33409b;
+  --chip-shade: rgba(9, 13, 56, 0.55);
+  --chip-emblem: rgba(11, 16, 62, 0.5);
+  --chip-edge: #1a2160;
 }
 
 /* Brighter and more orange-leaning than the #d1121a ink the cards are printed in, so the two
    reds read as different objects rather than one flat patch of colour. */
 .chip--red {
+  --chip-base: #e8202e;
   --chip-shade: rgba(124, 8, 20, 0.6);
-  --chip-groove: rgba(112, 10, 20, 0.32);
-  --chip-emblem: rgba(116, 6, 16, 0.42);
-  background: radial-gradient(circle at 34% 27%, #ff7d72 0%, #ee2130 52%, #b8101f 100%);
+  --chip-emblem: rgba(116, 6, 16, 0.5);
+  --chip-edge: #8c0c17;
 }
 
 /* The third set. Pushed towards the yellow side of green to stay clear of the felt underneath. */
 .chip--green {
+  --chip-base: #23a340;
   --chip-shade: rgba(8, 62, 26, 0.6);
-  --chip-groove: rgba(10, 58, 26, 0.32);
-  --chip-emblem: rgba(6, 54, 22, 0.42);
-  background: radial-gradient(circle at 34% 27%, #7ee87a 0%, #23a83f 52%, #0f7a2a 100%);
+  --chip-emblem: rgba(6, 54, 22, 0.5);
+  --chip-edge: #0b6021;
 }
 
 .chip--sequenced {
@@ -995,8 +1280,98 @@ button:disabled {
   }
 }
 
+/*
+ * The celebration: every chip on the board turns slowly on the spot until it is showing the winner's
+ * colour, lifting off its square as it goes. Two chips back to back with their backfaces hidden is
+ * what makes the colour arrive with the turn instead of snapping over before it starts.
+ */
+.chip-flip {
+  position: absolute;
+  width: 72%;
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  animation: chip-turn 2.6s cubic-bezier(0.45, 0, 0.35, 1) var(--flip-delay) both;
+}
+
+.chip-flip .chip {
+  inset: 0;
+  width: 100%;
+  backface-visibility: hidden;
+}
+
+/* The winner's colour, waiting on the far face of the coin. */
+.chip-flip__face--back {
+  transform: rotateY(180deg);
+}
+
+/* A turn and a half over two and a half seconds - slow enough to watch the colour arrive. The odd
+   number of half-turns is what leaves it resting on the back face. */
+@keyframes chip-turn {
+  from {
+    transform: translateY(0) rotateY(0);
+  }
+  50% {
+    transform: translateY(-16%) rotateY(270deg);
+  }
+  to {
+    transform: translateY(0) rotateY(540deg);
+  }
+}
+
+/*
+ * Landed. Both faces are the winner's colour by now, so the chip can just keep going: one slow
+ * rotation every four seconds, floating up and back down as it turns. Each chip starts its own idle
+ * as it lands, so the board never syncs up into one throbbing mass.
+ */
+.chip-flip--turned {
+  animation: chip-celebrate 4s ease-in-out infinite;
+}
+
+@keyframes chip-celebrate {
+  from {
+    transform: translateY(0) rotateY(180deg);
+  }
+  50% {
+    transform: translateY(-16%) rotateY(360deg);
+  }
+  to {
+    transform: translateY(0) rotateY(540deg);
+  }
+}
+
+/* Lit from the moment it lands, so the whole board is still glowing in the winner's colour while
+   the panel above it is being read. */
+.chip-flip--turned .chip-flip__face {
+  animation: chip-jackpot-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes chip-jackpot-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0.06em 0.06em rgba(0, 0, 0, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0.1em 0.34em rgba(255, 214, 70, 0.9));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chip--latest {
+    animation: none;
+  }
+
+  /* No turning, but the colour still has to change - it is how you see who won. */
+  .chip-flip,
+  .chip-flip--turned {
+    animation: none;
+    transform: rotateY(180deg);
+  }
+
+  .chip-flip--turned .chip-flip__face,
+  .board-frame--jackpot,
+  .board-frame--jackpot::before,
+  .outcome__word,
+  .outcome--lost .outcome__line {
     animation: none;
   }
 }

@@ -4,17 +4,23 @@
  *
  * Several lines per event so he does not repeat himself in a single game.
  */
-export type RefereeEvent =
+/** The events he actually has something to say about. */
+export type SpokenEvent =
   | 'missedDraw'
   | 'outOfTurn'
-  | 'youWon'
-  | 'youLost'
   | 'yourSequence'
   | 'theirSequence'
   | 'chipStolen'
   | 'chipRemoved';
 
-const LINES: Record<RefereeEvent, string[]> = {
+/**
+ * Winning and losing are in here so they can outrank everything else, but he keeps quiet about them:
+ * the end of the game gets the whole board celebrating and a taunt above it, and a bubble on top of
+ * that is just noise.
+ */
+export type RefereeEvent = SpokenEvent | 'youWon' | 'youLost';
+
+const LINES: Record<SpokenEvent, string[]> = {
   missedDraw: [
     '😴 Are you sleeping? You forgot to draw a card.',
     '🥱 No card for you. The pile was right there, mate.',
@@ -24,16 +30,6 @@ const LINES: Record<RefereeEvent, string[]> = {
     '😠 Can’t you wait? It isn’t your turn.',
     '✋ Patience. The board isn’t going anywhere.',
     '🙄 Tapping harder won’t make it your turn.',
-  ],
-  youWon: [
-    '🏆 Fine. You won. Don’t let it go to your head.',
-    '🎉 Somehow, you did it. I had money on the other one.',
-    '👏 A win. I’ll pretend I saw it coming.',
-  ],
-  youLost: [
-    '💀 Outplayed. Shall I fetch you a cushion?',
-    '😬 That was painful to referee, let alone play.',
-    '🪦 Beaten fair and square. Better luck next deal.',
   ],
   yourSequence: [
     '😲 A sequence? From you? Extraordinary.',
@@ -69,7 +65,7 @@ const PRIORITY: RefereeEvent[] = [
   'outOfTurn',
 ];
 
-export function pickRefereeLine(event: RefereeEvent): string {
+export function pickRefereeLine(event: SpokenEvent): string {
   const lines = LINES[event];
   return lines[Math.floor(Math.random() * lines.length)];
 }

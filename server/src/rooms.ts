@@ -25,6 +25,8 @@ export interface Room {
   size: number;
   players: RoomPlayer[];
   game: GameState | null;
+  /** Who has asked for another deal since this game finished. Everyone has to agree. */
+  rematchVotes: string[];
 }
 
 export interface RoomConfig {
@@ -60,6 +62,7 @@ export class RoomManager {
       size: config.size,
       players: [{ id: playerId, name: hostName, color: config.color, socketId, connected: true }],
       game: null,
+      rematchVotes: [],
     };
     this.rooms.set(code, room);
     return room;
@@ -100,6 +103,20 @@ export class RoomManager {
     player.connected = true;
     this.cancelCleanup(room.code);
     return room;
+  }
+
+  /**
+   * Records a player's vote for another game. Every seat has to ask, so nobody is yanked out of the
+   * celebration (or the taunt) by someone else's itchy finger. Returns true once the last vote is in.
+   */
+  voteRematch(code: string, playerId: string): { room: Room; ready: boolean } {
+    const room = this.rooms.get(code.toUpperCase());
+    if (!room) throw new Error('Room not found');
+    if (room.status !== 'finished') throw new Error('That game is not over yet');
+    if (!room.players.some((p) => p.id === playerId)) throw new Error('Player not in this room');
+
+    if (!room.rematchVotes.includes(playerId)) room.rematchVotes.push(playerId);
+    return { room, ready: room.rematchVotes.length === room.players.length };
   }
 
   /**

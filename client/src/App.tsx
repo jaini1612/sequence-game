@@ -9,9 +9,15 @@ import { DiscardPile } from './DiscardPile';
 import { DrawPile } from './DrawPile';
 import { Hand } from './Hand';
 import { Hud } from './Hud';
+import { Outcome } from './Outcome';
 import { computePlayableCells } from './gameHelpers';
-import { playTurnChime } from './sound';
-import { mostNotable, pickRefereeLine, type RefereeEvent } from './refereeLines';
+import { playJackpot, playLoserSting, playTurnChime } from './sound';
+import {
+  mostNotable,
+  pickRefereeLine,
+  type RefereeEvent,
+  type SpokenEvent,
+} from './refereeLines';
 import './App.css';
 
 type Phase = 'lobby' | 'claiming' | 'rejoining' | 'waiting' | 'playing';
@@ -23,6 +29,8 @@ interface RoomUpdate {
   size: number;
   players: { name: string; color: PlayerColor; connected: boolean }[];
   availableColors: PlayerColor[];
+  /** Player ids who have asked for another deal. Every seat has to ask before one starts. */
+  rematchVotes: string[];
 }
 
 interface AckResponse {
@@ -82,11 +90,15 @@ function eventsBetween(before: Tally, after: Tally, view: PlayerView): RefereeEv
   return events;
 }
 
-/** The winning player's colour, capitalised for display. */
-function winnerColor(view: PlayerView): string | null {
-  const winner = view.opponents.find((o) => o.id === view.winnerId);
-  if (!winner) return null;
-  return winner.color[0] + winner.color.slice(1).toLowerCase();
+/** The winning player's colour, whoever they are. Null until somebody has won. */
+function winnerColor(view: PlayerView): PlayerColor | null {
+  if (!view.winnerId) return null;
+  if (view.winnerId === view.you.id) return view.you.color;
+  return view.opponents.find((o) => o.id === view.winnerId)?.color ?? null;
+}
+
+function colorName(color: PlayerColor): string {
+  return color[0] + color.slice(1).toLowerCase();
 }
 
 function App() {
@@ -107,7 +119,7 @@ function App() {
   // What the last view looked like, so an update can be read as "what just happened".
   const lastTallyRef = useRef<Tally | null>(null);
 
-  function heckle(event: RefereeEvent) {
+  function heckle(event: SpokenEvent) {
     setRefereeLine(pickRefereeLine(event));
   }
 
@@ -142,13 +154,21 @@ function App() {
       if (wasMyTurnRef.current === false && view.isYourTurn && !view.winnerId) playTurnChime();
       wasMyTurnRef.current = view.isYourTurn;
 
-      // The first view we ever see is the baseline, not a set of things that just happened.
+      // The first view we ever see is the baseline, not a set of things that just happened - and so
+      // is the first view of a rematch, since a fresh board would otherwise read as every chip on
+      // the table being stolen at once.
+      const previous = lastTallyRef.current;
       const next = tally(view);
-      if (lastTallyRef.current) {
-        const event = mostNotable(eventsBetween(lastTallyRef.current, next, view));
-        if (event) setRefereeLine(pickRefereeLine(event));
+      const freshDeal = previous?.winnerId && !next.winnerId;
+      if (previous && !freshDeal) {
+        const event = mostNotable(eventsBetween(previous, next, view));
+        // The end of the game is announced above the board instead, with the whole board joining in.
+        if (event === 'youWon') playJackpot();
+        else if (event === 'youLost') playLoserSting();
+        else if (event) setRefereeLine(pickRefereeLine(event));
       }
       lastTallyRef.current = next;
+      if (freshDeal) setRefereeLine(null);
 
       setGameView(view);
       setSelectedCard(null);
@@ -239,6 +259,12 @@ function App() {
     });
   }
 
+  function handleRematch() {
+    socket.emit('game:rematch', { roomCode }, (res: AckResponse) => {
+      if (!res.ok) setError(res.error ?? 'Could not start a rematch');
+    });
+  }
+
   function handleDiscardDeadCard(card: CardCode) {
     socket.emit('game:discardDeadCard', { roomCode, card }, (res: AckResponse) => {
       if (!res.ok) setError(res.error ?? 'Could not discard card');
@@ -292,6 +318,8 @@ function App() {
   // stays gated on it actually being your turn.
   const canPlay = gameView.isYourTurn && !gameView.winnerId;
   const highlightedCells = selectedCard ? computePlayableCells(gameView, selectedCard) : [];
+  const winner = winnerColor(gameView);
+  const rematchVotes = room?.rematchVotes ?? [];
 
   return (
     <div className="game">
@@ -307,18 +335,21 @@ function App() {
         </p>
       )}
       {gameView.winnerId && (
-        <div className="win-banner">
-          {gameView.winnerId === gameView.you.id
-            ? 'You win! 🎉'
-            : // With three players "opponent" is ambiguous, so name the colour that won.
-              `${winnerColor(gameView) ?? 'Opponent'} wins`}
-        </div>
+        <Outcome
+          youWon={gameView.winnerId === gameView.you.id}
+          winnerLabel={winner ? colorName(winner) : 'Opponent'}
+          votes={rematchVotes.length}
+          needed={room?.size ?? rematchVotes.length + 1}
+          youVoted={rematchVotes.includes(playerId)}
+          onRematch={handleRematch}
+        />
       )}
       <div className="game__table">
         <Board
           view={gameView}
           highlightedCells={highlightedCells}
           canPlay={canPlay}
+          celebrateColor={winner}
           // Highlighted squares stay tappable off-turn so the referee can point out why nothing
           // happened, rather than the tap vanishing into thin air.
           onCellClick={(pos) => {

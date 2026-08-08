@@ -33,6 +33,7 @@ function roomPayload(room: Room) {
     size: room.size,
     players: room.players.map((p) => ({ name: p.name, color: p.color, connected: p.connected })),
     availableColors: rooms.availableColors(room),
+    rematchVotes: room.rematchVotes,
   };
 }
 
@@ -214,6 +215,28 @@ io.on('connection', (socket: Socket) => {
       }
     },
   );
+
+  // Another deal with the same seats and colours. It takes every player asking, and the vote count
+  // rides along in the room payload so everyone can see who is still admiring the board.
+  socket.on('game:rematch', (data: { roomCode: string }, ack: (res: any) => void) => {
+    const room = rooms.getRoom(data?.roomCode ?? '');
+    if (!room) return ack({ ok: false, error: 'Game not found' });
+    const player = room.players.find((p) => p.socketId === socket.id);
+    if (!player) return ack({ ok: false, error: 'Not part of this room' });
+    try {
+      const { ready } = rooms.voteRematch(room.code, player.id);
+      ack({ ok: true });
+      if (!ready) return broadcastRoom(room);
+
+      room.rematchVotes = [];
+      room.status = 'playing';
+      room.game = createGame(room.players.map((p) => ({ id: p.id, color: p.color })));
+      broadcastRoom(room);
+      broadcastGame(room);
+    } catch (err) {
+      ack({ ok: false, error: (err as Error).message });
+    }
+  });
 
   socket.on('disconnect', () => {
     const room = rooms.getRoomBySocketId(socket.id);
