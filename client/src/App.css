@@ -999,9 +999,11 @@ button:disabled {
   font-size: 0.85em;
 }
 
+/* "10" is the widest index and the only one the enlarged pips come close to, so it is set a shade
+   smaller again to keep its clearance in line with every other rank. */
 .card__index-rank--double {
-  font-size: 0.6em;
-  letter-spacing: -0.04em;
+  font-size: 0.54em;
+  letter-spacing: -0.05em;
 }
 
 /* Suit pips come from the deck sprite, so their shape no longer depends on the available fonts -
@@ -1017,24 +1019,27 @@ button:disabled {
 }
 
 /* Inset enough that the outer pip columns clear the corner indices on both diagonals, and centred
-   so the pip block sits square on the card. */
+   so the pip block sits square on the card. Widened from 21% to give the larger pips room to grow
+   without the outer columns closing on the middle one. */
 .card__face {
   position: absolute;
   top: 6%;
   bottom: 6%;
-  left: 21%;
-  right: 21%;
+  left: 18%;
+  right: 18%;
 }
 
 /*
- * A pip is 1.27x taller than it is wide, and the ten packs its rows only 13% of the panel apart, so
- * the width has to stay under about an eighth of the card or consecutive rows touch. 0.52em leaves
- * a couple of pixels of daylight between rows at every size.
+ * What actually limits pip size is the horizontal gap between neighbouring pip columns, not the
+ * vertical gap between rows: the ten's tightest pairs (a middle pip against an outer one) sit in
+ * different columns, so they can pass close vertically without ever touching. With the panel at 18%
+ * insets the columns are ~18% of the card apart, and 0.68em works out to 16% - clear, and about a
+ * pixel and a half bigger than before at every size.
  */
 .card__pip {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 0.52em;
+  width: 0.68em;
   height: auto;
 }
 
