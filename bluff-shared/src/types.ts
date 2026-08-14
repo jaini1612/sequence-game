@@ -159,6 +159,13 @@ export interface BluffPlayer {
   bluffMeter: number;
   /** Also strictly private until the game is over - see BluffStats. */
   stats: BluffStats;
+  /**
+   * Passed this round, and so out of it: they may still call somebody a liar, but they cannot put
+   * another card down until the round ends. Cleared when it does.
+   */
+  passedRound: boolean;
+  /** Waved the closing claim through rather than checking it. */
+  letGo: boolean;
 }
 
 /** The face-down cards on top of the pile and the story told about them. */
@@ -192,6 +199,9 @@ export type BluffEvent =
     }
   /** A full lap of passes, so the pile is taken out of play rather than left to rot. */
   | { type: 'burn'; count: number }
+  /** Everyone else has passed, so this claim is the round's last - check it or let it go. */
+  | { type: 'roundClosing'; playerId: string }
+  | { type: 'letGo'; playerId: string }
   /** A bluff meter filled up and bought its owner a challenge back. */
   | { type: 'challengeEarned'; playerId: string }
   | { type: 'out'; playerId: string; place: number }
@@ -214,8 +224,12 @@ export interface BluffState {
   maxClaim: number;
   /** Cards taken out of play by burnt rounds, so hand counts still add up for the UI. */
   burned: number;
-  /** Passes in a row. Once it laps the table the round is dead. */
-  consecutivePasses: number;
+  /**
+   * Whoever made the round's closing claim, once everyone else has passed out of the round. While
+   * this is set the round is shutting down: nobody may play, and the others each either check the
+   * claim or let it go.
+   */
+  finalClaimBy: string | null;
   /** Wall-clock deadline for the current turn. */
   turnEndsAt: number;
   /** Player ids in finishing order. */

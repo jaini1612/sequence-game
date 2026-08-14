@@ -26,6 +26,9 @@ export type HostEvent =
   | 'someoneEarned'
   | 'tooManyCards'
   | 'meterActive'
+  | 'roundClosing'
+  | 'youClosedRound'
+  | 'letGo'
   | 'someoneOut'
   | 'youAreOut'
   | 'youWon'
@@ -103,6 +106,20 @@ const LINES: Record<HostEvent, string[]> = {
     'Honest, as it happens. Rare, at this table.',
     'Telling the truth. What a strange strategy.',
     'All true. Somebody owes an apology.',
+  ],
+  /** Everyone else has stood down, so this claim is the round's last word. */
+  roundClosing: [
+    'Everyone else folded. {name} gets the last word — check it or let it stand.',
+    '{name} is the only one left standing. That claim closes the round.',
+    'The rest of you ran away. {name} has one last claim on the table.',
+  ],
+  youClosedRound: [
+    'Last one standing. That claim closes the round — let us see if anybody dares.',
+    'They all stood down. Your word is the last one, for better or worse.',
+  ],
+  letGo: [
+    '{name} lets it stand. No stomach for a fight.',
+    '{name} waves it through. Suspiciously trusting.',
   ],
   burned: [
     'Nobody dared touch it. {n} cards burned and forgotten.',
@@ -187,6 +204,9 @@ export const HOST_PRIORITY: HostEvent[] = [
   'challengeEarned',
   'someoneEarned',
   'burned',
+  'youClosedRound',
+  'roundClosing',
+  'letGo',
   'youTimedOut',
   'timedOut',
   'youPlayed',

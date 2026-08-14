@@ -54,6 +54,8 @@ export function createGame(
     place: null,
     challenges: MAX_CHALLENGES,
     bluffMeter: 0,
+    passedRound: false,
+    letGo: false,
     stats: { turns: 0, bluffTurns: 0, bluffsCaught: 0, challengesMade: 0, challengesCorrect: 0 },
   }));
 
@@ -69,7 +71,7 @@ export function createGame(
     // allows a claim of thirty.
     maxClaim: maxRankCount(deck) * CLAIM_HEADROOM,
     burned: 0,
-    consecutivePasses: 0,
+    finalClaimBy: null,
     turnEndsAt: now + config.turnSeconds * 1000,
     winners: [],
     finished: false,
@@ -107,7 +109,28 @@ function currentPlayer(state: BluffState): BluffPlayer {
   return state.players[state.currentSeat];
 }
 
-/** The first seat after `from` still holding cards. Players on their way out are stepped over. */
+/** Everyone still entitled to put cards down this round: holding cards, and not yet passed. */
+function playersInRound(state: BluffState): BluffPlayer[] {
+  return state.players.filter((p) => p.status === 'active' && !p.passedRound);
+}
+
+/**
+ * The first seat after `from` that can still play. Both the players on their way out of the game and
+ * the ones who have passed out of this round are stepped over - a pass is a decision for the whole
+ * round, not just for one turn.
+ */
+function nextSeatInRound(state: BluffState, from: number): number {
+  const total = state.players.length;
+  for (let step = 1; step <= total; step++) {
+    const seat = (from + step) % total;
+    const player = state.players[seat];
+    if (player.status === 'active' && !player.passedRound) return seat;
+  }
+  // Nobody left to play - the caller closes the round instead.
+  return from;
+}
+
+/** The first seat after `from` still in the game at all, ignoring who has passed this round. */
 function nextActiveSeatAfter(state: BluffState, from: number): number {
   const total = state.players.length;
   for (let step = 1; step <= total; step++) {
@@ -118,13 +141,41 @@ function nextActiveSeatAfter(state: BluffState, from: number): number {
   return from;
 }
 
+/** Wipes the round's bookkeeping. The pile is left alone - who gets it differs by how it ended. */
+function clearRound(state: BluffState): void {
+  state.lastClaim = null;
+  state.roundRank = null;
+  state.finalClaimBy = null;
+  for (const player of state.players) {
+    player.passedRound = false;
+    player.letGo = false;
+  }
+}
+
+/**
+ * Ends a round nobody was willing to fight over: the pile goes out of the game entirely, and the
+ * named seat opens the next one.
+ */
+function burnAndOpen(state: BluffState, openerSeat: number, now: number): void {
+  if (state.pile.length > 0) record(state, { type: 'burn', count: state.pile.length });
+  state.burned += state.pile.length;
+  state.pile = [];
+  clearRound(state);
+
+  const opener =
+    state.players[openerSeat].status === 'active'
+      ? openerSeat
+      : nextActiveSeatAfter(state, openerSeat);
+  setTurn(state, opener, now);
+}
+
 function setTurn(state: BluffState, seat: number, now: number): void {
   state.currentSeat = seat;
   state.turnEndsAt = now + state.config.turnSeconds * 1000;
 }
 
 function advanceTurn(state: BluffState, now: number): void {
-  setTurn(state, nextActiveSeatAfter(state, state.currentSeat), now);
+  setTurn(state, nextSeatInRound(state, state.currentSeat), now);
 }
 
 function record(state: BluffState, event: BluffEvent): void {
@@ -182,6 +233,8 @@ export function playCards(
   if (state.finished) throw new Error('The game is over');
   const player = playerById(state, playerId);
   if (player.status !== 'active') throw new Error('You are out of this hand');
+  if (state.finalClaimBy) throw new Error('This round is closing - check that claim or let it go');
+  if (player.passedRound) throw new Error('You passed this round - you can only check now');
   if (currentPlayer(state).id !== playerId) throw new Error('Not your turn');
   if (cards.length < 1) throw new Error('Put at least one card down');
   if (cards.length > state.maxClaim) {
@@ -196,11 +249,14 @@ export function playCards(
   settlePendingOut(state);
   if (state.finished) return state;
 
+  // Whether this player is the last one still in the round, decided before the play changes
+  // anything: emptying a hand moves them out of `active` and would hide the fact.
+  const closesTheRound = playersInRound(state).length === 1;
+
   player.hand = remaining;
   state.pile.push(...cards);
   state.lastClaim = { playerId, rank, count: cards.length, cards: [...cards] };
   state.roundRank = rank;
-  state.consecutivePasses = 0;
   record(state, { type: 'play', playerId, rank, count: cards.length });
 
   const lies = cards.filter((card) => rankOf(card) !== rank).length;
@@ -222,39 +278,102 @@ export function playCards(
   // An empty hand is not a win yet - the claim that emptied it is still open to challenge.
   if (player.hand.length === 0) player.status = 'pendingOut';
 
+  /*
+   * With everyone else passed out of the round, this was the last player's one closing claim. The
+   * round stops here rather than letting them play on unopposed - which is what used to happen, and
+   * meant a single round could swallow the entire game while the others passed round and round.
+   *
+   * The clock keeps running, now against the others' decision to check it or let it go.
+   */
+  if (closesTheRound) {
+    state.finalClaimBy = playerId;
+    record(state, { type: 'roundClosing', playerId });
+    setTurn(state, player.seat, now);
+    return state;
+  }
+
   advanceTurn(state, now);
   return state;
 }
 
+/**
+ * Standing down - for the whole round, not just this turn.
+ *
+ * Passing used to cost only the current turn, so a player could pass and then play again a moment
+ * later. That let one player keep laying cards while everybody else passed in circles, and the round
+ * never ended. Sitting out is now a commitment: no more cards this round, though the right to call
+ * somebody a liar survives it.
+ */
 export function pass(state: BluffState, playerId: string, now: number, timedOut = false): BluffState {
   if (state.finished) throw new Error('The game is over');
   const player = playerById(state, playerId);
   if (player.status !== 'active') throw new Error('You are out of this hand');
+  if (state.finalClaimBy) throw new Error('This round is closing - check that claim or let it go');
+  if (player.passedRound) throw new Error('You have already passed this round');
   if (currentPlayer(state).id !== playerId) throw new Error('Not your turn');
 
   beginUpdate(state);
   settlePendingOut(state);
   if (state.finished) return state;
 
-  state.consecutivePasses++;
+  player.passedRound = true;
   record(state, { type: 'pass', playerId, timedOut });
 
-  // Once a pass has gone all the way round, nobody is willing to touch the pile - burn it rather
-  // than let the round run forever.
-  const killedTheRound = state.consecutivePasses >= countWith(state, 'active');
-  if (killedTheRound) {
-    if (state.pile.length > 0) record(state, { type: 'burn', count: state.pile.length });
-    state.burned += state.pile.length;
-    state.pile = [];
-    state.lastClaim = null;
-    state.roundRank = null;
-    state.consecutivePasses = 0;
+  const left = playersInRound(state);
+
+  // Nobody at all is willing to touch it, so the pile leaves the game and the last to stand down
+  // opens the next round.
+  if (left.length === 0) {
+    burnAndOpen(state, player.seat, now);
+    return state;
   }
 
-  // Whoever passed last opens the round their pass just killed; otherwise play simply moves on.
-  if (killedTheRound) setTurn(state, state.currentSeat, now);
-  else advanceTurn(state, now);
+  // One player left in: the turn is theirs, and whatever they put down closes the round.
+  setTurn(state, left.length === 1 ? left[0].seat : nextSeatInRound(state, state.currentSeat), now);
   return state;
+}
+
+/** Whether this player still has to decide about the claim closing the round. */
+export function canLetGo(state: BluffState, playerId: string): boolean {
+  if (state.finished || !state.finalClaimBy || state.finalClaimBy === playerId) return false;
+  const player = state.players.find((p) => p.id === playerId);
+  return player?.status === 'active' && !player.letGo;
+}
+
+/**
+ * Waving the closing claim through. Once everyone has, the round is over and its pile is burnt -
+ * nobody was prepared to challenge it, so nobody has earned it either.
+ */
+export function letGo(state: BluffState, playerId: string, now: number): BluffState {
+  if (state.finished) throw new Error('The game is over');
+  if (!state.finalClaimBy) throw new Error('No claim is waiting on you');
+  if (state.finalClaimBy === playerId) throw new Error('That claim is yours');
+  const player = playerById(state, playerId);
+  if (player.status !== 'active') throw new Error('You are out of this hand');
+  if (player.letGo) throw new Error('You have already let that go');
+
+  beginUpdate(state);
+  applyLetGo(state, player, now);
+  return state;
+}
+
+/**
+ * The act itself, without opening a fresh batch of events - so the turn clock can wave several
+ * players through at once and have all of it land in a single update.
+ */
+function applyLetGo(state: BluffState, player: BluffPlayer, now: number): void {
+  const closerId = state.finalClaimBy;
+  if (!closerId) return;
+
+  player.letGo = true;
+  record(state, { type: 'letGo', playerId: player.id });
+
+  const closer = playerById(state, closerId);
+  const stillDeciding = state.players.filter(
+    (p) => p.status === 'active' && p.id !== closer.id && !p.letGo,
+  );
+  // The last word belongs to whoever survived the round unchallenged.
+  if (stillDeciding.length === 0) burnAndOpen(state, closer.seat, now);
 }
 
 /** Whether this player is allowed to call the last claim a lie right now. */
@@ -310,9 +429,8 @@ export function challenge(state: BluffState, challengerId: string, now: number):
   if (loser.status === 'pendingOut') loser.status = 'active';
 
   state.pile = [];
-  state.lastClaim = null;
-  state.roundRank = null;
-  state.consecutivePasses = 0;
+  // A challenge ends the round outright, so everyone is back in for the next one.
+  clearRound(state);
 
   settlePendingOut(state);
   if (state.finished) return state;
@@ -333,6 +451,19 @@ export function challenge(state: BluffState, challengerId: string, now: number):
  */
 export function applyTimeout(state: BluffState, now: number): BluffState | null {
   if (state.finished || now < state.turnEndsAt) return null;
+
+  // A closing round is waiting on everyone else at once, not on one player, so the clock running out
+  // lets the claim through on behalf of whoever has not spoken.
+  if (state.finalClaimBy) {
+    const undecided = state.players.filter(
+      (p) => p.status === 'active' && p.id !== state.finalClaimBy && !p.letGo,
+    );
+    if (undecided.length === 0) return null;
+    beginUpdate(state);
+    for (const player of undecided) applyLetGo(state, player, now);
+    return state;
+  }
+
   return pass(state, currentPlayer(state).id, now, true);
 }
 
@@ -345,6 +476,10 @@ export interface BluffOpponentView {
   place: number | null;
   /** Public: everyone can see how much scepticism a player has left to spend. */
   challenges: number;
+  /** Sitting this round out. Public - the table can see who has stood down. */
+  passedRound: boolean;
+  /** Has already waved the closing claim through. */
+  letGo: boolean;
 }
 
 export interface BluffView {
@@ -359,6 +494,8 @@ export interface BluffView {
     challenges: number;
     /** Yours alone - it is a count of your own lies, and no opponent's view ever carries it. */
     bluffMeter: number;
+    passedRound: boolean;
+    letGo: boolean;
   };
   /** Everyone else, in seating order starting from the seat after yours. */
   opponents: BluffOpponentView[];
@@ -372,6 +509,10 @@ export interface BluffView {
   burned: number;
   lastClaim: { playerId: string; rank: Rank; count: number } | null;
   canChallenge: boolean;
+  /** Whoever made the round's closing claim; null while the round is still running normally. */
+  finalClaimBy: string | null;
+  /** Whether this round's closing claim is still waiting on you to check it or wave it through. */
+  canLetGo: boolean;
   turnEndsAt: number;
   winners: string[];
   finished: boolean;
@@ -400,6 +541,8 @@ export function toBluffView(state: BluffState, playerId: string): BluffView {
       status: p.status,
       place: p.place,
       challenges: p.challenges,
+      passedRound: p.passedRound,
+      letGo: p.letGo,
     });
   }
 
@@ -414,11 +557,16 @@ export function toBluffView(state: BluffState, playerId: string): BluffView {
       place: you.place,
       challenges: you.challenges,
       bluffMeter: you.bluffMeter,
+      passedRound: you.passedRound,
+      letGo: you.letGo,
     },
     opponents,
     currentSeat: state.currentSeat,
     currentPlayerId: state.players[state.currentSeat].id,
-    isYourTurn: state.players[state.currentSeat].id === playerId && !state.finished,
+    // A closing round belongs to nobody: the claim is down and the only moves left are check or
+    // let go, so no seat is "on turn" even though the clock is still running.
+    isYourTurn:
+      state.players[state.currentSeat].id === playerId && !state.finished && !state.finalClaimBy,
     roundRank: state.roundRank,
     pileCount: state.pile.length,
     maxClaim: state.maxClaim,
@@ -427,6 +575,8 @@ export function toBluffView(state: BluffState, playerId: string): BluffView {
       ? { playerId: state.lastClaim.playerId, rank: state.lastClaim.rank, count: state.lastClaim.count }
       : null,
     canChallenge: canChallenge(state, playerId),
+    finalClaimBy: state.finalClaimBy,
+    canLetGo: canLetGo(state, playerId),
     turnEndsAt: state.turnEndsAt,
     winners: [...state.winners],
     finished: state.finished,

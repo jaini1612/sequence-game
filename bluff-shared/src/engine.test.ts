@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   applyTimeout,
   canChallenge,
+  canLetGo,
+  letGo,
   challenge,
   createGame,
   pass,
@@ -333,16 +335,20 @@ describe('passing', () => {
     expect(turnOf(state)).toBe(lastToPass);
   });
 
-  it('resets the pass count as soon as somebody plays', () => {
+  it('keeps a player who passed out of the rest of the round', () => {
     const state = game();
-    setHand(state, state.currentSeat, ['9H']);
-    playCards(state, turnOf(state), ['9H'], '9', NOW);
-    pass(state, turnOf(state), NOW);
-    setHand(state, state.currentSeat, ['9S']);
-    playCards(state, turnOf(state), ['9S'], '9', NOW);
+    // Hands deep enough that nobody empties one and leaves the round by going out instead.
+    state.players.forEach((p, i) => setHand(state, i, ['9H', '9S', '9D', '9C', '2H']));
+    state.currentSeat = 0;
+    playCards(state, 'p0', ['9H'], '9', NOW);
 
-    expect(state.consecutivePasses).toBe(0);
-    expect(state.pile).toHaveLength(2);
+    pass(state, 'p1', NOW);
+    expect(state.players[1].passedRound).toBe(true);
+
+    // Two are still in, so the round runs on - and the turn steps over the one who stood down.
+    playCards(state, 'p2', ['9H'], '9', NOW);
+    expect(turnOf(state)).toBe('p0');
+    expect(() => playCards(state, 'p1', ['9S'], '9', NOW)).toThrow(/passed this round/);
   });
 
   it('passes the turn on when the clock runs out', () => {
@@ -353,6 +359,103 @@ describe('passing', () => {
     applyTimeout(state, state.turnEndsAt);
     expect(turnOf(state)).not.toBe(stalling);
     expect(state.events).toContainEqual({ type: 'pass', playerId: stalling, timedOut: true });
+  });
+});
+
+describe('closing a round', () => {
+  /** Opens a round from seat 0 and stands everyone else down, leaving p0 alone in it. */
+  function leaveOneStanding(state: BluffState) {
+    state.currentSeat = 0;
+    setHand(state, 0, ['9H', '9S', '9D']);
+    playCards(state, 'p0', ['9H'], '9', NOW);
+    pass(state, 'p1', NOW);
+    pass(state, 'p2', NOW);
+    return state;
+  }
+
+  it('hands the last player left one closing claim, then stops the round', () => {
+    const state = leaveOneStanding(game());
+    // Everyone else is out of the round, so the turn comes back to the one still in it.
+    expect(turnOf(state)).toBe('p0');
+    expect(state.finalClaimBy).toBeNull();
+
+    playCards(state, 'p0', ['9S'], '9', NOW);
+    expect(state.finalClaimBy).toBe('p0');
+    expect(state.events).toContainEqual({ type: 'roundClosing', playerId: 'p0' });
+
+    // And that really is the last of it - they cannot simply carry on.
+    expect(() => playCards(state, 'p0', ['9D'], '9', NOW)).toThrow(/closing/);
+  });
+
+  it('ends the round once everybody lets the closing claim go', () => {
+    const state = leaveOneStanding(game());
+    playCards(state, 'p0', ['9S'], '9', NOW);
+    expect(state.pile).toHaveLength(2);
+
+    expect(canLetGo(state, 'p1')).toBe(true);
+    expect(canLetGo(state, 'p0')).toBe(false);
+
+    letGo(state, 'p1', NOW);
+    expect(state.finalClaimBy).toBe('p0');
+
+    letGo(state, 'p2', NOW);
+    expect(state.finalClaimBy).toBeNull();
+    expect(state.pile).toHaveLength(0);
+    expect(state.burned).toBe(2);
+    expect(state.roundRank).toBeNull();
+    // Everyone is back in for the next round, which the survivor opens.
+    expect(state.players.every((p) => !p.passedRound && !p.letGo)).toBe(true);
+    expect(turnOf(state)).toBe('p0');
+  });
+
+  it('still lets a player who passed check the closing claim', () => {
+    const state = leaveOneStanding(game());
+    setHand(state, 0, ['2C']);
+    playCards(state, 'p0', ['2C'], '9', NOW);
+
+    expect(canChallenge(state, 'p1')).toBe(true);
+    challenge(state, 'p1', NOW);
+    expect(state.events.find((e) => e.type === 'challenge')).toMatchObject({ bluffed: true });
+    // A challenge ends the round outright, so nobody is left sitting it out.
+    expect(state.finalClaimBy).toBeNull();
+    expect(state.players.every((p) => !p.passedRound)).toBe(true);
+  });
+
+  it('cannot run on for ever with one player laying cards and the rest passing', () => {
+    // The bug this replaced: passes reset on every play, so a single round never ended.
+    const state = game();
+    state.currentSeat = 0;
+    setHand(state, 0, ['9H', '9S', '9D', '9C']);
+    playCards(state, 'p0', ['9H'], '9', NOW);
+
+    let guard = 0;
+    while (!state.finalClaimBy && state.pile.length > 0 && guard++ < 20) {
+      const on = turnOf(state);
+      if (on === 'p0') playCards(state, 'p0', [state.players[0].hand[0]], '9', NOW);
+      else pass(state, on, NOW);
+    }
+    expect(guard).toBeLessThan(20);
+    expect(state.finalClaimBy).toBe('p0');
+  });
+
+  it('burns the pile when even the last player stands down', () => {
+    const state = leaveOneStanding(game());
+    pass(state, 'p0', NOW);
+
+    expect(state.pile).toHaveLength(0);
+    expect(state.burned).toBe(1);
+    expect(state.finalClaimBy).toBeNull();
+    expect(turnOf(state)).toBe('p0');
+  });
+
+  it('lets the clock wave a closing claim through', () => {
+    const state = leaveOneStanding(game());
+    playCards(state, 'p0', ['9S'], '9', NOW);
+
+    applyTimeout(state, state.turnEndsAt);
+    expect(state.finalClaimBy).toBeNull();
+    expect(state.pile).toHaveLength(0);
+    expect(state.events.filter((e) => e.type === 'letGo')).toHaveLength(2);
   });
 });
 
@@ -402,15 +505,16 @@ describe('going out', () => {
 
   it('skips players who are already home', () => {
     const state = game({ playerCount: 4 });
+    [1, 2, 3].forEach((seat) => setHand(state, seat, ['KC', 'KH', 'KS', '2D']));
     aboutToWin(state, 0, 'KD');
     playCards(state, 'p0', ['KD'], 'K', NOW);
-    pass(state, 'p1', NOW);
-    expect(state.players[0].status).toBe('out');
 
-    pass(state, 'p2', NOW);
-    // A play rather than a third pass, so the round survives and the turn simply travels on.
-    setHand(state, 3, ['KC', '2D']);
+    // Everyone plays rather than passes, so the round stays open and only p0 has left the game.
+    playCards(state, 'p1', ['KC'], 'K', NOW);
+    expect(state.players[0].status).toBe('out');
+    playCards(state, 'p2', ['KC'], 'K', NOW);
     playCards(state, 'p3', ['KC'], 'K', NOW);
+
     // Back round to p1, never to p0.
     expect(turnOf(state)).toBe('p1');
   });

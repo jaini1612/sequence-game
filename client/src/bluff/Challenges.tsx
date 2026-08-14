@@ -63,6 +63,7 @@ export function Challenges({
   checkHint,
   onMeterInfo,
   pass,
+  letGo,
 }: {
   left: number;
   meter: number;
@@ -74,6 +75,8 @@ export function Challenges({
   onMeterInfo: () => void;
   /** Absent when it is not your turn - there is nothing to stand aside from. */
   pass: { onPass: () => void; disabled: boolean } | null;
+  /** Present only while a closing claim is waiting on you to wave it through. */
+  letGo: { onLetGo: () => void; disabled: boolean } | null;
 }) {
   const dry = left === 0;
   const filled = Math.min(1, meter / BLUFF_METER_GOAL);
@@ -127,13 +130,26 @@ export function Challenges({
           </span>
         </div>
 
+        {letGo && (
+          <button
+            type="button"
+            className="bluff-btn bluff-pass"
+            onClick={letGo.onLetGo}
+            disabled={letGo.disabled}
+            title="Let it go — accept the closing claim and end the round"
+          >
+            <PassIcon />
+            <span className="bluff-btn__word">Let go</span>
+          </button>
+        )}
+
         {pass && (
           <button
             type="button"
             className="bluff-btn bluff-pass"
             onClick={pass.onPass}
             disabled={pass.disabled}
-            title="Pass — play nothing this turn"
+            title="Pass — sit out the rest of this round. You can still check."
           >
             <PassIcon />
             <span className="bluff-btn__word">Pass</span>

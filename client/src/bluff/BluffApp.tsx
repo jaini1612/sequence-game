@@ -110,6 +110,19 @@ function candidatesFor(events: BluffEvent[], view: BluffView): Candidate[] {
       case 'burn':
         candidates.push({ event: 'burned', context: { n: event.count } });
         break;
+      case 'roundClosing':
+        candidates.push(
+          event.playerId === you
+            ? { event: 'youClosedRound', context: {} }
+            : { event: 'roundClosing', context: { name: nameOf(view, event.playerId) } },
+        );
+        break;
+      case 'letGo':
+        // Only worth a word when somebody else waves your claim through.
+        if (event.playerId !== you) {
+          candidates.push({ event: 'letGo', context: { name: nameOf(view, event.playerId) } });
+        }
+        break;
       case 'challengeEarned':
         candidates.push(
           event.playerId === you
@@ -531,6 +544,7 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
         busy={busy}
         onPass={() => send('game:pass', {}, 'Could not pass')}
         onChallenge={() => send('game:challenge', {}, 'Could not call that')}
+        onLetGo={() => send('game:letgo', {}, 'Could not let that go')}
         onMeterInfo={() => setHostLine(pickHostLine('meterActive'))}
       />
 

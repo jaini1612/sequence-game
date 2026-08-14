@@ -3,6 +3,7 @@ import {
   applyTimeout,
   challenge,
   createGame,
+  letGo,
   pass,
   playCards,
   toBluffView,
@@ -173,6 +174,13 @@ export function registerBluffGateway(nsp: Namespace): void {
     socket.on('game:challenge', (data: any, ack: Ack) => {
       action(socket, data?.roomCode, ack, (room, playerId) => {
         challenge(room.game!, playerId, Date.now());
+      });
+    });
+
+    // Waving through the claim that closed a round, rather than checking it.
+    socket.on('game:letgo', (data: any, ack: Ack) => {
+      action(socket, data?.roomCode, ack, (room, playerId) => {
+        letGo(room.game!, playerId, Date.now());
       });
     });
 

@@ -6,8 +6,10 @@ export type { Rng } from './deck.js';
 export {
   applyTimeout,
   canChallenge,
+  canLetGo,
   challenge,
   createGame,
+  letGo,
   pass,
   playCards,
   rankOf,

@@ -695,6 +695,17 @@
   opacity: 0.5;
 }
 
+/* Passed this round: still at the table and still able to check, just not playing into it. */
+.bluff-seat--stood-down .bluff-seat__fan,
+.bluff-seat--stood-down .bluff-seat__avatar {
+  opacity: 0.45;
+}
+
+.bluff-seat--stood-down .bluff-seat__note {
+  color: rgba(243, 238, 228, 0.4);
+  font-style: italic;
+}
+
 .bluff-seat--home .bluff-seat__avatar {
   background: linear-gradient(160deg, #f0d089, #a9852f);
   color: #2b1d05;

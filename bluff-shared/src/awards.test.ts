@@ -11,6 +11,8 @@ function player(id: string, stats: Partial<BluffStats>): BluffPlayer {
     place: null,
     challenges: 4,
     bluffMeter: 0,
+    passedRound: false,
+    letGo: false,
     stats: {
       turns: 10,
       bluffTurns: 0,

@@ -14,6 +14,7 @@ export function Tray({
   selection,
   onPass,
   onChallenge,
+  onLetGo,
   onMeterInfo,
   busy,
 }: {
@@ -21,6 +22,8 @@ export function Tray({
   selection: CardSelection;
   onPass: () => void;
   onChallenge: () => void;
+  /** Waving through the claim that closed the round. */
+  onLetGo: () => void;
   /** Asking what the bluff meter is, by prodding the empty Check button. */
   onMeterInfo: () => void;
   busy: boolean;
@@ -43,6 +46,24 @@ export function Tray({
       : view.opponents.find((o) => o.id === view.lastClaim!.playerId)?.name);
 
   const home = view.you.status !== 'active';
+
+  /** Where you stand when it is not your turn, which now has several quite different reasons. */
+  const closerName = view.finalClaimBy
+    ? view.finalClaimBy === view.you.id
+      ? 'you'
+      : (view.opponents.find((o) => o.id === view.finalClaimBy)?.name ?? 'somebody')
+    : null;
+
+  let standing: string;
+  if (view.finished) standing = 'The game is over.';
+  else if (view.canLetGo) standing = `${closerName} closed the round — check that claim, or let it go.`;
+  else if (view.finalClaimBy === view.you.id) standing = 'Your claim closed the round. Waiting on the others.';
+  else if (view.finalClaimBy) standing = `Waiting for the table to settle ${closerName}'s closing claim…`;
+  else if (view.you.passedRound) standing = 'You have passed this round. You can still check.';
+  else {
+    const on = view.opponents.find((o) => o.id === view.currentPlayerId)?.name ?? 'the table';
+    standing = `Waiting for ${on}…`;
+  }
 
   return (
     <div className="bluff-tray">
@@ -70,6 +91,7 @@ export function Tray({
             checkHint={claimText ? `${lastClaimer} claimed ${claimText}` : null}
             onMeterInfo={onMeterInfo}
             pass={yourTurn ? { onPass, disabled: busy } : null}
+            letGo={view.canLetGo ? { onLetGo, disabled: busy } : null}
           />
 
           {/*
@@ -112,13 +134,7 @@ export function Tray({
             ))}
           </div>
 
-          {!yourTurn && (
-            <p className="bluff-tray__waiting">
-              {view.finished
-                ? 'The game is over.'
-                : `Waiting for ${view.opponents.find((o) => o.id === view.currentPlayerId)?.name ?? 'the table'}…`}
-            </p>
-          )}
+          {!yourTurn && <p className="bluff-tray__waiting">{standing}</p>}
         </>
       )}
     </div>

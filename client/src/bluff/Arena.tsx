@@ -129,10 +129,13 @@ function Seat({
   fraction,
   caught,
   challenges,
+  passedRound,
 }: {
   name: string;
   handCount: number;
   challenges: number;
+  /** Sitting this round out - still at the table, but not playing into it. */
+  passedRound: boolean;
   spot: Spot;
   isCurrent: boolean;
   isYou: boolean;
@@ -151,6 +154,7 @@ function Seat({
     place !== null ? 'bluff-seat--home' : '',
     connected ? '' : 'bluff-seat--away',
     caught ? 'bluff-seat--caught' : '',
+    passedRound && place === null ? 'bluff-seat--stood-down' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -211,6 +215,8 @@ function Seat({
           <p className="bluff-seat__note bluff-seat__note--home">{place === 1 ? '1st — home' : '2nd — home'}</p>
         ) : isCurrent ? (
           <p className="bluff-seat__note">{seconds}s</p>
+        ) : passedRound ? (
+          <p className="bluff-seat__note">passed</p>
         ) : !connected ? (
           <p className="bluff-seat__note">away</p>
         ) : null}
@@ -401,6 +407,7 @@ export function Arena({
           fraction={fraction}
           caught={!!reveal?.bluffed && reveal.loserId === opponent.id}
           challenges={opponent.challenges}
+          passedRound={opponent.passedRound}
         />
       ))}
 
