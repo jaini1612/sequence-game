@@ -54,6 +54,7 @@ export function BluffLobby({
   busy,
   online,
   connectError,
+  onRetry,
 }: {
   onCreate: (name: string, config: BluffConfig) => void;
   onJoin: (name: string, code: string) => void;
@@ -64,6 +65,8 @@ export function BluffLobby({
   online: boolean;
   /** Socket.io's own reason for refusing, when it has one. */
   connectError: string | null;
+  /** Skip the backoff and try the server again right now. */
+  onRetry: () => void;
 }) {
   const [name, setName] = useState(getStoredName);
   const [playerCount, setPlayerCount] = useState(4);
@@ -204,17 +207,23 @@ export function BluffLobby({
       )}
 
       {!busy && !online && (
-        <p className="bluff-offline" role="status">
+        <div className="bluff-offline" role="status">
           {connectError ? (
             <>
-              Cannot reach the game server — <strong>{connectError}</strong>.
-              {connectError.toLowerCase().includes('namespace') &&
-                ' The server is running a build without SparrowBluff on it.'}
+              <span>
+                Still reaching the game server — <strong>{connectError}</strong>.{' '}
+                {connectError.toLowerCase().includes('namespace')
+                  ? 'It is probably restarting into a new build. Retrying on its own.'
+                  : 'Retrying on its own.'}
+              </span>
+              <button type="button" className="bluff-offline__retry" onClick={onRetry}>
+                Try now
+              </button>
             </>
           ) : (
-            'Connecting to the game server…'
+            <span>Connecting to the game server…</span>
           )}
-        </p>
+        </div>
       )}
 
       {error && <p className="bluff-error">{error}</p>}

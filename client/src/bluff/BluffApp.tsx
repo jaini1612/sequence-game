@@ -6,7 +6,7 @@ import {
   type BluffEvent,
   type BluffView,
 } from '@bluff/shared';
-import { bluffSocket, getConnectError, SERVER_ORIGIN } from './socket';
+import { bluffSocket, getConnectError, retryConnection, SERVER_ORIGIN } from './socket';
 import {
   clearStoredRoomCode,
   getPlayerId,
@@ -444,6 +444,7 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
           busy={busy}
           online={online}
           connectError={connectError}
+          onRetry={retryConnection}
         />
       </div>
     );
