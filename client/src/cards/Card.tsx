@@ -1,5 +1,8 @@
-import type { CardCode } from '@sequence/shared';
 import { useCardSprite } from './cardSprite';
+import './card.css';
+
+/** Any "9H"/"10D"/"QS" style code. Typed locally so the kit does not depend on either game. */
+type CardCode = string;
 
 const RED_SUITS = new Set(['D', 'H']);
 const COURT_RANKS = new Set(['J', 'Q', 'K']);

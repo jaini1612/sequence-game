@@ -1,5 +1,5 @@
 import type { PlayerView } from '@sequence/shared';
-import { Card } from './Card';
+import { Card } from './cards';
 
 /** The face-up pile beside the board, showing the most recent card played by either player. */
 export function DiscardPile({ view }: { view: PlayerView }) {

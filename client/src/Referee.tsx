@@ -1,5 +1,5 @@
 import type { CardCode } from '@sequence/shared';
-import { useCardSprite } from './cardSprite';
+import { useCardSprite } from './cards';
 
 /**
  * The Jack who referees the game: a round badge in the corner that speaks up when a player needs

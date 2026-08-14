@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { isDeadCard, type CardCode, type PlayerView } from '@sequence/shared';
-import { Card } from './Card';
+import { Card } from './cards';
 
 /**
  * A card in hand needs an identity that survives being moved, because a hand can legitimately hold

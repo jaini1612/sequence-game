@@ -1,0 +1,140 @@
+/*
+ * A standard playing card face: corner indices, pip layouts and the engraved court art. Shared by
+ * every game in the portal, so it belongs to the card kit rather than to either game's stylesheet.
+ */
+.card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+  border-radius: 0.3em;
+  font-size: var(--card-font, 11px);
+  /* A <button> does not inherit font-family from :root, so without this the rank switched between
+     Arial and system-ui as a card moved between clickable and not. */
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+.card--red {
+  color: #d1121a;
+}
+
+.card--black {
+  color: #111;
+}
+
+.card--playable {
+  cursor: pointer;
+}
+
+.card--selected {
+  outline: 2px solid #f5c518;
+}
+
+.card--dead {
+  opacity: 0.45;
+}
+
+.card__index {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.95;
+}
+
+.card__index--tl {
+  top: 3%;
+  left: 4%;
+}
+
+.card__index--br {
+  bottom: 3%;
+  right: 4%;
+  transform: rotate(180deg);
+}
+
+/*
+ * The rank sits in a narrow corner column, as it does on a printed card. At full size a two-digit
+ * "10" is over twice as wide as any other rank and ran straight into the first column of pips, so
+ * it is set smaller and tighter - which is also how real decks handle it.
+ */
+.card__index-rank {
+  font-size: 0.85em;
+}
+
+/* "10" is the widest index and the only one the enlarged pips come close to, so it is set a shade
+   smaller again to keep its clearance in line with every other rank. */
+.card__index-rank--double {
+  font-size: 0.54em;
+  letter-spacing: -0.05em;
+}
+
+/* Suit pips come from the deck sprite, so their shape no longer depends on the available fonts -
+   which is what used to make them jump between sizes as a card switched between button and div. */
+.suit {
+  display: block;
+  fill: currentColor;
+}
+
+.card__index-suit {
+  width: 0.45em;
+  height: auto;
+}
+
+/* Inset enough that the outer pip columns clear the corner indices on both diagonals, and centred
+   so the pip block sits square on the card. Widened from 21% to give the larger pips room to grow
+   without the outer columns closing on the middle one. */
+.card__face {
+  position: absolute;
+  top: 6%;
+  bottom: 6%;
+  left: 18%;
+  right: 18%;
+}
+
+/*
+ * What actually limits pip size is the horizontal gap between neighbouring pip columns, not the
+ * vertical gap between rows: the ten's tightest pairs (a middle pip against an outer one) sit in
+ * different columns, so they can pass close vertically without ever touching. With the panel at 18%
+ * insets the columns are ~18% of the card apart, and 0.68em works out to 16% - clear, and about a
+ * pixel and a half bigger than before at every size.
+ */
+.card__pip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 0.68em;
+  height: auto;
+}
+
+.card__pip--flip {
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.card__pip--ace {
+  left: 50%;
+  top: 50%;
+  width: 1.5em;
+}
+
+/* Stand-in for a court card while the sprite is still loading. */
+.card__pip--centre {
+  left: 50%;
+  top: 50%;
+  width: 1.1em;
+}
+
+/* The court faces are complete cards in the sprite - border and indices included - so they fill
+   the whole slot rather than sitting in the inner panel the pip layouts use. */
+.card__face--court {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

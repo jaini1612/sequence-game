@@ -1,0 +1,1974 @@
+/*
+ * SparrowBluff. Midnight felt, gold rope and oxblood card backs - a private table rather than a
+ * casino floor. Every class here is prefixed `bluff-`, so nothing in this file can reach a Sequence
+ * screen and nothing there can reach this one.
+ */
+.bluff {
+  --gold: #e9c46a;
+  --gold-dim: rgba(233, 196, 106, 0.55);
+  --ink: #f3eee4;
+  --ink-dim: rgba(243, 238, 228, 0.6);
+  --felt: #1c2247;
+
+  position: relative;
+  /* Isolated so the backdrop below stays behind this game and not behind the body's own felt. */
+  isolation: isolate;
+  width: 100%;
+  max-width: 30rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  color: var(--ink);
+}
+
+/* Its own ground, painted over the portal's and Sequence's alike. */
+.bluff::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 110% 70% at 50% 0%, rgba(233, 196, 106, 0.09), transparent 60%),
+    radial-gradient(ellipse at 50% 45%, #241a2b 0%, #170f1c 55%, #0a060d 100%);
+}
+
+/* ------------------------------------------------------------------ lobby */
+
+.bluff-lobby {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.bluff-lobby__hero {
+  display: grid;
+  place-items: center;
+  height: 6.5rem;
+}
+
+.bluff-lobby__fan {
+  display: flex;
+  align-items: center;
+}
+
+.bluff-lobby__fan-card {
+  width: 3.4rem;
+  height: 4.8rem;
+  --card-font: 13px;
+  border-radius: 0.3em;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+}
+
+.bluff-lobby__fan-card:first-child {
+  transform: rotate(-15deg) translateY(7px);
+  margin-right: -0.8rem;
+}
+
+.bluff-lobby__fan-card:nth-child(2) {
+  transform: translateY(-7px) scale(1.07);
+  z-index: 1;
+}
+
+.bluff-lobby__fan-card:last-child {
+  transform: rotate(15deg) translateY(7px);
+  margin-left: -0.8rem;
+}
+
+.bluff-lobby__title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.9rem, 8vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(180deg, #fff8e6 0%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bluff-lobby__tagline {
+  margin: -0.4rem 0 0.4rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+}
+
+/* A hairline rule broken by the house crest. One ornament, and nothing else competing with it. */
+.bluff-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: -0.2rem 0 0.3rem;
+}
+
+.bluff-rule span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(233, 196, 106, 0.4), transparent);
+}
+
+.bluff-rule svg {
+  width: 0.85rem;
+  height: auto;
+  fill: rgba(233, 196, 106, 0.65);
+}
+
+.bluff-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bluff-field__label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+}
+
+.bluff-field__label em {
+  font-style: normal;
+  color: rgba(255, 138, 138, 0.85);
+  letter-spacing: 0.06em;
+}
+
+.bluff-field__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: rgba(243, 238, 228, 0.45);
+}
+
+.bluff-lobby input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(233, 196, 106, 0.25);
+  border-radius: 0.6rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.bluff-lobby input::placeholder {
+  color: rgba(243, 238, 228, 0.3);
+}
+
+.bluff-lobby input:focus-visible {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.bluff-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bluff-choice__opt {
+  flex: 1 1 auto;
+  min-width: 3rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.bluff-choice__opt--on {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(233, 196, 106, 0.22), rgba(233, 196, 106, 0.08));
+  color: #fff8e6;
+  font-weight: 600;
+}
+
+.bluff-primary {
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 0.7rem;
+  background: linear-gradient(180deg, #f0d089 0%, #c9a349 100%);
+  color: #2b1d05;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.bluff-primary:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(243, 238, 228, 0.35);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.bluff-primary:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.bluff-secondary {
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.7rem;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.bluff-secondary:hover {
+  border-color: var(--gold-dim);
+}
+
+.bluff-or {
+  position: relative;
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(243, 238, 228, 0.4);
+}
+
+.bluff-or span {
+  position: relative;
+  padding: 0 0.7rem;
+  background: transparent;
+}
+
+.bluff-or::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bluff-or span {
+  position: relative;
+  z-index: 1;
+  background: #1a1220;
+}
+
+.bluff-join {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bluff-join__code {
+  flex: 1;
+  text-align: center;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.bluff-join button {
+  padding: 0 1.2rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 0.6rem;
+  background: rgba(233, 196, 106, 0.12);
+  color: var(--gold);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bluff-join button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bluff-error {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(255, 120, 120, 0.4);
+  border-radius: 0.6rem;
+  background: rgba(120, 20, 30, 0.35);
+  font-size: 0.85rem;
+}
+
+.bluff-error--tap {
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------- waiting room */
+
+.bluff-waiting {
+  text-align: center;
+}
+
+.bluff-waiting__code {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-dim);
+}
+
+.bluff-waiting__code strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 2rem;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+}
+
+.bluff-waiting__players {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bluff-waiting__players li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  text-align: left;
+}
+
+.bluff-waiting__avatar {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #7d1220, #3f070f);
+  border: 1px solid var(--gold-dim);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--gold);
+}
+
+.bluff-waiting__avatar--empty {
+  background: rgba(255, 255, 255, 0.05);
+  border-style: dashed;
+  color: rgba(243, 238, 228, 0.35);
+}
+
+.bluff-waiting__player--away em,
+.bluff-waiting__player--empty {
+  color: rgba(243, 238, 228, 0.4);
+  font-style: normal;
+  font-size: 0.78rem;
+}
+
+/* ---------------------------------------------------------------- table */
+
+.bluff__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.bluff__code {
+  margin-left: auto;
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  color: var(--gold-dim);
+}
+
+.bluff__offline {
+  font-size: 0.75rem;
+  color: #ffb4b4;
+}
+
+.bluff__footnote {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(243, 238, 228, 0.32);
+}
+
+/*
+ * The table stands on end. A phone is a tall rectangle, so a tall table fills it: the long sides
+ * carry the chairs, the pile sits comfortably in the middle, and nothing has to shrink to fit
+ * across a 375px width.
+ */
+.bluff-arena {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.16;
+  margin: 0.25rem auto 0;
+}
+
+/*
+ * A poker table, not a dining table: a racetrack - straight sides with fully rounded ends - rather
+ * than an ellipse. `border-radius: 999px` on a box taller than it is wide gives exactly that
+ * silhouette standing upright, and it holds at every screen size instead of squashing to a circle.
+ */
+.bluff-table {
+  position: absolute;
+  inset: 6% 17%;
+}
+
+/* The padded rail players rest their arms on, in gold rather than the usual leather. */
+.bluff-table__rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(170deg, #f0d089 0%, #a9852f 45%, #5c4413 100%);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.6),
+    inset 0 2px 3px rgba(255, 255, 255, 0.45);
+}
+
+/*
+ * The rail is inset in absolute units, not percentages: a percentage inset is measured against the
+ * table's width on the left and right but its height at the top and bottom, which on a tall table
+ * makes the rail far thicker top and bottom than at the sides. A single length keeps it even the
+ * whole way round - and it is wide enough to carry the suit pattern inside it.
+ */
+.bluff-table {
+  --rail: clamp(0.95rem, 5vw, 1.4rem);
+}
+
+.bluff-table__felt {
+  position: absolute;
+  inset: var(--rail);
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 18%, rgba(255, 255, 255, 0.1), transparent 62%),
+    radial-gradient(ellipse at 50% 45%, #2a3260 0%, var(--felt) 55%, #10142c 100%);
+  /* The bead of gold where the rail meets the cloth, then the drop into the well. */
+  box-shadow:
+    0 0 0 2px rgba(233, 196, 106, 0.5),
+    inset 0 7px 20px rgba(0, 0, 0, 0.6);
+}
+
+/*
+ * The house pattern, inlaid into the rail itself rather than printed on the cloth. Running down the
+ * centre of the gold band is what lets the suits keep their real colours - black on midnight felt
+ * would have been invisible, black on gold is a proper inlay.
+ */
+.bluff-table__rail {
+  position: absolute;
+  inset: calc(var(--rail) / 2);
+  pointer-events: none;
+}
+
+.bluff-table__suit {
+  position: absolute;
+  width: 0.44rem;
+  height: auto;
+  transform: translate(-50%, -50%);
+}
+
+/*
+ * Set through `color`, not `fill`: the sprite's pips are drawn with fill="currentColor", so a fill
+ * declared out here is simply ignored and they inherit the page's near-white ink instead.
+ */
+.bluff-table__suit--red {
+  color: rgba(155, 20, 33, 0.85);
+}
+
+.bluff-table__suit--black {
+  color: rgba(26, 18, 8, 0.85);
+}
+
+/* The betting line printed on the cloth, a hand's width in from the rail. */
+.bluff-table__felt::after {
+  content: '';
+  position: absolute;
+  inset: clamp(0.5rem, 2.6vw, 0.85rem);
+  border-radius: 999px;
+  border: 1px solid rgba(233, 196, 106, 0.14);
+}
+
+/*
+ * The house mark, printed into the cloth. Kept faint and left to sit *behind* the pile - a table's
+ * logo is half-covered by cards for most of a game, which is exactly what makes it look printed on
+ * rather than pasted over.
+ */
+.bluff-table__crest {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 25%;
+  max-width: 4.4rem;
+  color: rgba(233, 196, 106, 0.11);
+  pointer-events: none;
+}
+
+.bluff-table__crest svg {
+  width: 100%;
+  height: auto;
+  fill: currentColor;
+}
+
+/* ----------------------------------------------------------------- seats */
+
+.bluff-seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 4.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+  z-index: 3;
+}
+
+.bluff-seat__fan {
+  display: flex;
+  justify-content: center;
+  height: 1.5rem;
+}
+
+.bluff-seat__card {
+  width: 1.05rem;
+  height: 1.5rem;
+  margin-inline: -0.28rem;
+  border-radius: 0.15rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.bluff-seat__badge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.bluff-seat__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #7d1220, #3f070f);
+  border: 1px solid var(--gold-dim);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--gold);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.bluff-seat__count {
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.15rem;
+  min-width: 1.15rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background: #10142c;
+  border: 1px solid var(--gold-dim);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.15rem;
+  color: var(--ink);
+}
+
+/* The turn clock, sweeping anticlockwise round the chair that is on the spot. */
+.bluff-seat__ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.bluff-seat__ring-track,
+.bluff-seat__ring-run {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.bluff-seat__ring-track {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.bluff-seat__ring-run {
+  stroke: var(--gold);
+  stroke-linecap: round;
+  stroke-dasharray: 113.1;
+  transition: stroke-dashoffset 0.25s linear;
+}
+
+.bluff-seat__plate {
+  max-width: 100%;
+  margin-top: -0.15rem;
+  padding: 0.15rem 0.45rem 0.2rem;
+  border-radius: 0.45rem;
+  background: rgba(8, 6, 14, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.bluff-seat--turn .bluff-seat__plate {
+  border-color: var(--gold-dim);
+}
+
+.bluff-seat__name {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.bluff-seat__note {
+  margin: 0;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  color: rgba(243, 238, 228, 0.5);
+}
+
+/* Four tick marks: enough to read a chair's remaining scepticism at a glance, small enough that it
+   stays a detail on the plaque rather than a second control panel. */
+.bluff-seat__chal {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.bluff-seat__chal i {
+  width: 5px;
+  height: 3px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bluff-seat__chal .bluff-seat__chal--on {
+  background: var(--gold);
+}
+
+.bluff-seat__note--home {
+  color: var(--gold);
+}
+
+.bluff-seat--turn .bluff-seat__avatar {
+  border-color: var(--gold);
+  box-shadow:
+    0 0 0 2px rgba(233, 196, 106, 0.25),
+    0 0 18px rgba(233, 196, 106, 0.45);
+}
+
+.bluff-seat--away {
+  opacity: 0.5;
+}
+
+.bluff-seat--home .bluff-seat__avatar {
+  background: linear-gradient(160deg, #f0d089, #a9852f);
+  color: #2b1d05;
+}
+
+.bluff-seat--home .bluff-seat__fan {
+  opacity: 0.25;
+}
+
+/* ------------------------------------------------------------------ pile */
+
+.bluff-pile {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  z-index: 2;
+}
+
+.bluff-pile__stack {
+  position: relative;
+  width: 2.9rem;
+  height: 4.05rem;
+}
+
+.bluff-pile__card {
+  position: absolute;
+  inset: 0;
+}
+
+.bluff-pile__count {
+  margin: 0;
+  font-size: 0.7rem;
+  color: rgba(243, 238, 228, 0.5);
+}
+
+.bluff-pile__claim {
+  margin: 0;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--gold-dim);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------- cards in flight */
+
+.bluff-flight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bluff-flight__card {
+  position: absolute;
+  width: 2.6rem;
+  height: 3.65rem;
+  margin: -1.8rem 0 0 -1.3rem;
+  border-radius: 0.3rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+  transition:
+    left 0.55s cubic-bezier(0.32, 0.72, 0.35, 1),
+    top 0.55s cubic-bezier(0.32, 0.72, 0.35, 1),
+    transform 0.55s ease,
+    opacity 0.3s ease 0.35s;
+  transform: rotate(-8deg) scale(1.05);
+}
+
+.bluff-flight__card--landed {
+  transform: rotate(4deg) scale(0.95);
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------- reveal */
+
+.bluff-reveal {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.9rem;
+  background: rgba(10, 6, 13, 0.92);
+  border: 1px solid var(--gold-dim);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  transition:
+    left 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.8s ease,
+    scale 0.8s ease;
+}
+
+.bluff-reveal--away {
+  opacity: 0;
+  scale: 0.4;
+}
+
+.bluff-reveal__verdict {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  animation: bluff-stamp 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.bluff-reveal__verdict--lie {
+  color: #ff6b6b;
+  text-shadow: 0 0 16px rgba(255, 60, 60, 0.5);
+}
+
+.bluff-reveal__verdict--true {
+  color: #7ee08a;
+  text-shadow: 0 0 16px rgba(80, 220, 110, 0.4);
+}
+
+@keyframes bluff-stamp {
+  from {
+    transform: scale(2.2) rotate(-8deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/*
+ * The catch itself: two rings thrown out from the middle of the table, the second chasing the first.
+ * Purely decorative and purely transform-and-opacity, so it costs nothing to run.
+ */
+.bluff-reveal__shock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 107, 107, 0.85);
+  pointer-events: none;
+  animation: bluff-shock 0.85s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+.bluff-reveal__shock--late {
+  border-color: rgba(233, 196, 106, 0.75);
+  animation-delay: 0.16s;
+}
+
+@keyframes bluff-shock {
+  from {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(7);
+    opacity: 0;
+  }
+}
+
+/*
+ * Wraps, because a claim can be as big as the deck allows - twenty-four cards in a scrambled double
+ * deck - and a single unwrapped row of those would run clean off the side of the screen.
+ */
+.bluff-reveal__cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+  max-width: 16.5rem;
+}
+
+/*
+ * A big claim gets smaller cards. Wrapping alone keeps two dozen of them on screen but stacks them
+ * into a tower taller than the table; shrinking them holds the panel to a few tidy rows. Nobody is
+ * reading these individually anyway - the red rings say which ones were the lie.
+ */
+/*
+ * An explicit width, not just a cap: the panel is a centred flex column, so a wrapping child
+ * shrink-wraps to whatever its siblings happen to need and a max-width alone never widens it. Fixing
+ * the width is what actually buys the extra columns.
+ */
+.bluff-reveal__cards--many {
+  width: 16.5rem;
+  max-width: 72vw;
+}
+
+.bluff-reveal__cards--many .bluff-reveal__card {
+  width: 1.65rem;
+  height: 2.3rem;
+  --card-font: 7px;
+}
+
+.bluff-reveal__cards--many .bluff-reveal__x {
+  width: 0.75rem;
+  height: 0.75rem;
+  font-size: 0.48rem;
+  right: -0.15rem;
+  top: -0.2rem;
+}
+
+.bluff-reveal__card {
+  position: relative;
+  width: 2.4rem;
+  height: 3.35rem;
+  --card-font: 10px;
+  border-radius: 0.3em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  animation: bluff-flip 0.45s ease-out both;
+}
+
+/*
+ * The cards that were not what they were called. They keep shivering after they land, so the eye is
+ * pulled straight to the evidence rather than having to compare thirteen ranks itself.
+ */
+.bluff-reveal__card--lie {
+  box-shadow:
+    0 0 0 2px #ff6b6b,
+    0 0 14px rgba(255, 60, 60, 0.55);
+  animation:
+    bluff-flip 0.45s ease-out both,
+    bluff-guilty 0.9s ease-in-out 0.5s infinite;
+}
+
+@keyframes bluff-guilty {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3.5deg);
+  }
+  75% {
+    transform: rotate(3.5deg);
+  }
+}
+
+.bluff-reveal__x {
+  position: absolute;
+  right: -0.2rem;
+  top: -0.3rem;
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #ff6b6b;
+  color: #2a0508;
+  font-size: 0.6rem;
+  font-weight: 900;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  animation: bluff-stamp 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) 0.45s both;
+}
+
+/* The chair that has just been caught flinches, then braces for the pile. */
+.bluff-seat--caught .bluff-seat__avatar {
+  border-color: #ff6b6b;
+  box-shadow:
+    0 0 0 2px rgba(255, 80, 90, 0.3),
+    0 0 20px rgba(255, 60, 60, 0.6);
+}
+
+.bluff-seat--caught {
+  animation: bluff-flinch 0.5s ease-in-out 2;
+}
+
+@keyframes bluff-flinch {
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+  25% {
+    transform: translate(calc(-50% - 3px), -50%);
+  }
+  75% {
+    transform: translate(calc(-50% + 3px), -50%);
+  }
+}
+
+/* Turning over: the card spins on its edge, so the face arrives rather than fades. */
+@keyframes bluff-flip {
+  from {
+    transform: rotateY(90deg) scale(0.9);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.bluff-reveal__line {
+  margin: 0;
+  font-size: 0.72rem;
+  text-align: center;
+  color: var(--ink-dim);
+  max-width: 12rem;
+}
+
+/* ------------------------------------------------------------------ host */
+
+/*
+ * The host bar. The badge is a circle whose diameter is the bubble's height, so the two sit as one
+ * bar rather than a card standing next to a box.
+ */
+.bluff-host {
+  --host-size: 2.9rem;
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.bluff-host__badge {
+  flex: none;
+  width: var(--host-size);
+  height: var(--host-size);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f6f2e8;
+  border: 2px solid var(--gold-dim);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bluff-host__badge--talking {
+  border-color: var(--gold);
+  box-shadow:
+    0 0 0 2px rgba(233, 196, 106, 0.2),
+    0 3px 14px rgba(233, 196, 106, 0.35);
+}
+
+/* Mirrored so he faces into the message rather than away off the edge of the screen. */
+.bluff-host__art {
+  width: 116%;
+  height: 116%;
+  transform: scaleX(-1);
+}
+
+.bluff-host__fallback {
+  font-weight: 800;
+  color: #2b1d05;
+}
+
+.bluff-host__bubble {
+  flex: 1;
+  min-height: var(--host-size);
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(243, 238, 228, 0.35);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: left;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.bluff-host__bubble--on {
+  border-color: var(--gold-dim);
+  background: rgba(233, 196, 106, 0.1);
+  color: var(--ink);
+  font-style: normal;
+  animation: bluff-bubble 0.3s ease-out;
+}
+
+@keyframes bluff-bubble {
+  from {
+    transform: translateX(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------- challenges kept */
+
+/* Check, the counter it spends, and play - one strip sitting directly on top of your hand. */
+.bluff-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bluff-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/* Both buttons are the same pill so they read as a matched pair either side of the counter. */
+.bluff-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  flex: none;
+  padding: 0.42rem 0.62rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(243, 238, 228, 0.32);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: not-allowed;
+  overflow: hidden;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.bluff-btn__word {
+  position: relative;
+  line-height: 1;
+}
+
+.bluff-btn__icon {
+  position: relative;
+  width: 0.92rem;
+  height: auto;
+  fill: currentColor;
+}
+
+.bluff-btn .bluff-hand-icon {
+  position: relative;
+}
+
+/* How many cards are about to go down. */
+.bluff-btn__count {
+  position: relative;
+  min-width: 1.05rem;
+  margin-left: 0.1rem;
+  padding: 0 0.22rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.05rem;
+  text-align: center;
+}
+
+/*
+ * Check is muted until there is actually a claim to dispute, then quietly insistent about it.
+ */
+.bluff-check--live {
+  border-color: rgba(255, 120, 120, 0.6);
+  background: linear-gradient(180deg, rgba(190, 40, 55, 0.5), rgba(120, 20, 30, 0.45));
+  color: #fff;
+  cursor: pointer;
+  animation: bluff-throb 1.8s ease-in-out infinite;
+}
+
+.bluff-check--live .bluff-hand-icon {
+  fill: #ffd9d9;
+}
+
+/*
+ * Out of checks: this button becomes its own meter, filling left to right as you lie. No separate
+ * gauge - the bar refilling *is* the explanation of what it is refilling.
+ */
+.bluff-check--filling {
+  border-color: rgba(233, 196, 106, 0.4);
+  color: rgba(243, 238, 228, 0.55);
+}
+
+.bluff-check__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--meter, 0%);
+  background: linear-gradient(180deg, rgba(233, 196, 106, 0.42), rgba(233, 196, 106, 0.16));
+  border-right: 1px solid rgba(233, 196, 106, 0.75);
+  transition: width 0.55s cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+
+/* Pass sits at the far end of the strip, away from Check. */
+.bluff-pass {
+  margin-left: auto;
+}
+
+.bluff-pass:not(:disabled) {
+  color: rgba(243, 238, 228, 0.75);
+  border-color: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.bluff-pass:not(:disabled):hover {
+  border-color: var(--gold-dim);
+  color: var(--ink);
+}
+
+/*
+ * Play sits on the near rail of the table rather than in the strip - it is the only control whose
+ * result lands on the cloth, so it belongs at the edge the cards actually go over.
+ */
+.bluff-play {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 0.45rem 0.75rem;
+}
+
+.bluff-play:not(:disabled) {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #f0d089 0%, #c9a349 100%);
+  color: #2b1d05;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+}
+
+.bluff-play:disabled {
+  background: rgba(10, 8, 16, 0.72);
+  border-color: rgba(233, 196, 106, 0.28);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+.bluff-play:not(:disabled):active {
+  transform: translateX(-50%) translateY(1px);
+}
+
+.bluff-play:not(:disabled) .bluff-btn__count {
+  background: rgba(43, 29, 5, 0.22);
+}
+
+.bluff-chal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bluff-chal__pips {
+  display: flex;
+  gap: 0.3rem;
+}
+
+/* One spent challenge is a hollow outline; one you still hold is lit and raised. */
+.bluff-chal__pip {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(243, 238, 228, 0.16);
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.bluff-chal__pip--on {
+  border-color: var(--gold-dim);
+  background: linear-gradient(180deg, rgba(233, 196, 106, 0.22), rgba(233, 196, 106, 0.06));
+  color: var(--gold);
+  box-shadow: 0 1px 6px rgba(233, 196, 106, 0.2);
+}
+
+.bluff-hand-icon {
+  width: 0.8rem;
+  height: auto;
+  fill: currentColor;
+  /* Tipped off vertical so it reads as a jab across the table rather than a raised hand. */
+  transform: rotate(-22deg);
+}
+
+/* Screen readers get the number; the table gets the icons. */
+.bluff-chal__count {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ tray */
+
+.bluff-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.bluff-tray__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.bluff-tray__name {
+  font-weight: 700;
+}
+
+.bluff-tray__count {
+  color: var(--ink-dim);
+}
+
+.bluff-tray__clock {
+  margin-left: auto;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.bluff-tray__waiting,
+.bluff-tray__home {
+  margin: 0;
+  padding: 0.6rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+}
+
+/*
+ * A held hand. Cards overlap heavily because two decks between two players is fifty-two cards each -
+ * so the row scrolls sideways rather than shrinking the cards to nothing.
+ */
+.bluff-hand {
+  display: flex;
+  padding: 0.6rem 0.4rem 0.2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.bluff-hand__slot {
+  flex: none;
+  width: 2.6rem;
+  height: 3.65rem;
+  --card-font: 11px;
+  margin-right: -1rem;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.3em;
+  /* A hairline down the left edge of every card, so a tight fan reads as cards and not one white
+     slab. The card in front casts it onto the one behind, exactly as a held hand does. */
+  box-shadow:
+    -1px 0 0 rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease;
+  cursor: pointer;
+}
+
+.bluff-hand__slot:last-child {
+  margin-right: 0;
+}
+
+.bluff-hand--live .bluff-hand__slot:hover {
+  transform: translateY(-4px);
+}
+
+.bluff-hand__slot--picked {
+  transform: translateY(-12px);
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 8px 16px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+.bluff-hand__slot:disabled {
+  cursor: default;
+}
+
+/* ----------------------------------------------------------------- claim */
+
+/*
+ * All thirteen ranks on one line, permanently. Thirteen equal columns rather than a wrapping grid,
+ * so the row is exactly one line tall at every width and the cards below it never shift.
+ */
+.bluff-ranks {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 2px;
+}
+
+.bluff-ranks__rank {
+  padding: 0.34rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(243, 238, 228, 0.3);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: not-allowed;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+/* Live only when the round is yours to name. */
+.bluff-ranks--live .bluff-ranks__rank {
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+
+.bluff-ranks--live .bluff-ranks__rank:hover {
+  border-color: var(--gold-dim);
+  color: var(--ink);
+}
+
+/* The rank in play - lit whether you chose it or the round did. */
+.bluff-ranks__rank--on {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(233, 196, 106, 0.28), rgba(233, 196, 106, 0.08));
+  color: #fff8e6;
+}
+
+.bluff-ranks .bluff-ranks__rank--on:disabled {
+  color: #fff8e6;
+}
+
+@keyframes bluff-throb {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 80, 90, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px 0 rgba(255, 80, 90, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bluff-check--live,
+  .bluff-reveal__verdict,
+  .bluff-reveal__card,
+  .bluff-reveal__card--lie,
+  .bluff-reveal__x,
+  .bluff-reveal__shock,
+  .bluff-seat--caught,
+  .bluff-host__bubble--on {
+    animation: none;
+  }
+
+  /* The evidence still has to be obvious without the shiver, so the outline stays. */
+  .bluff-reveal__shock {
+    display: none;
+  }
+
+  .bluff-flight__card,
+  .bluff-reveal {
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* ---------------------------------------------------------------- finish */
+
+.bluff-finish {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 5, 11, 0.78);
+  backdrop-filter: blur(3px);
+  animation: bluff-fade 0.35s ease-out;
+}
+
+@keyframes bluff-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bluff-finish__card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 20rem;
+  /* The honours make this card tall on a small phone, so it scrolls rather than running off screen. */
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.4rem 1.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(180deg, rgba(40, 26, 20, 0.95), rgba(18, 10, 16, 0.95));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  text-align: center;
+  animation: bluff-rise 0.4s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes bluff-rise {
+  from {
+    transform: translateY(18px) scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.bluff-finish__crown {
+  margin: 0;
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.bluff-finish__headline {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(180deg, #fff8e6, var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bluff-finish--lost .bluff-finish__headline {
+  background: linear-gradient(180deg, #ffd7d7, #c96a6a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bluff-finish__podium {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bluff-finish__podium li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.9rem;
+}
+
+.bluff-finish__me {
+  border: 1px solid var(--gold-dim);
+  background: rgba(233, 196, 106, 0.12);
+}
+
+.bluff-finish__place {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.bluff-finish__line {
+  margin: 0;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--ink-dim);
+}
+
+.bluff-finish__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------- honours */
+
+/*
+ * The case file. One rule runs through every colour below: gold is what a player got away with,
+ * oxblood is what they were caught at. Nothing here is tinted for decoration.
+ */
+
+.bluff-honours {
+  --charge: #d64a58;
+  --charge-ink: #ff9aa4;
+
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 21rem;
+  max-height: calc(100dvh - 1.6rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 0.95rem 0.95rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(180deg, rgba(36, 26, 43, 0.97), rgba(10, 6, 13, 0.97));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  text-align: left;
+  animation: bluff-rise 0.4s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.bluff-honours__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bluff-honours__back {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.bluff-honours__back:hover {
+  color: var(--ink);
+}
+
+.bluff-honours__case {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(233, 196, 106, 0.75);
+}
+
+/* The wanted notice: the one panel on the screen that gets to shout. */
+.bluff-wanted {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  padding: 0.8rem 0.8rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--gold-dim);
+  background:
+    radial-gradient(ellipse 90% 100% at 20% 0%, rgba(233, 196, 106, 0.16), transparent 68%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.bluff-wanted--me {
+  box-shadow: 0 0 0 1px var(--gold-dim);
+}
+
+.bluff-mug {
+  display: grid;
+  place-items: center;
+  width: 4.6rem;
+  height: 5.5rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(233, 196, 106, 0.45);
+  overflow: hidden;
+  /* The oxblood card back, with the height ruler ruled straight through it. */
+  background-image:
+    repeating-linear-gradient(0deg, rgba(233, 196, 106, 0.22) 0 1px, transparent 1px 13px),
+    linear-gradient(160deg, #7d1220, #3f070f);
+}
+
+.bluff-face {
+  width: 3.9rem;
+  height: auto;
+}
+
+.bluff-face__skin {
+  fill: var(--gold);
+}
+
+.bluff-face__mask {
+  fill: #2c060e;
+}
+
+.bluff-face__white {
+  fill: #fff8e6;
+}
+
+.bluff-face__line {
+  stroke: #2c060e;
+}
+
+.bluff-face__teeth {
+  stroke: #b98a3f;
+  fill: none;
+}
+
+.bluff-mug__no {
+  margin: 0.25rem 0 0;
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  color: rgba(243, 238, 228, 0.45);
+}
+
+.bluff-wanted__body {
+  min-width: 0;
+}
+
+/*
+ * A float the exact size of the stamp, so only the lines that actually reach it are shortened. A
+ * padding would narrow the whole column and break a long name in half; this leaves the charge and
+ * the tally the full width.
+ */
+.bluff-wanted__body::before {
+  content: '';
+  float: right;
+  width: 5.3rem;
+  height: 1.7rem;
+}
+
+.bluff-wanted__label {
+  margin: 0;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.bluff-wanted__name {
+  margin: 0.15rem 0 0.1rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #fff8e6, var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  overflow-wrap: break-word;
+}
+
+.bluff-wanted__charge {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(243, 238, 228, 0.72);
+}
+
+.bluff-wanted__tally {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.bluff-wanted__tally p {
+  margin: 0;
+  font-size: 0.6rem;
+  line-height: 1.35;
+  color: rgba(243, 238, 228, 0.55);
+}
+
+.bluff-tally {
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 1.5rem;
+}
+
+.bluff-tally__mark {
+  stroke: var(--gold);
+  fill: none;
+}
+
+.bluff-tally__out {
+  stroke: var(--charge);
+  fill: none;
+}
+
+/* Ink on paper, not a badge: the verdict is stamped across the corner of the notice. */
+.bluff-stamp {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  transform: rotate(6deg);
+  /* The verdict lands last, and lands hard - it is the moment the whole screen is built around. */
+  animation: bluff-thump 0.32s cubic-bezier(0.3, 1.6, 0.5, 1) 0.35s both;
+  padding: 0.15rem 0.4rem 0.1rem;
+  border: 2px solid rgba(214, 74, 88, 0.9);
+  border-radius: 0.3rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--charge-ink);
+}
+
+@keyframes bluff-thump {
+  from {
+    transform: rotate(-16deg) scale(1.9);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(6deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.bluff-files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bluff-file {
+  display: grid;
+  grid-template-columns: 1.3rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid var(--gold-dim);
+}
+
+.bluff-file--charged {
+  border-left-color: rgba(214, 74, 88, 0.85);
+}
+
+.bluff-file--me {
+  background: rgba(233, 196, 106, 0.11);
+}
+
+.bluff-file svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: var(--gold);
+  color: var(--gold);
+}
+
+.bluff-file--charged svg {
+  fill: #e2758a;
+  color: #e2758a;
+}
+
+.bluff-file__text {
+  min-width: 0;
+}
+
+.bluff-file__label {
+  margin: 0;
+  font-size: 0.53rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(233, 196, 106, 0.85);
+}
+
+.bluff-file--charged .bluff-file__label {
+  color: rgba(226, 117, 138, 0.9);
+}
+
+.bluff-file__name {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff8e6;
+  /* Long names lose their tail rather than pushing the verdict off the file. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bluff-file__line {
+  margin: 0;
+  font-size: 0.64rem;
+  color: rgba(243, 238, 228, 0.55);
+}
+
+.bluff-file__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.22rem;
+}
+
+.bluff-chip {
+  padding: 0.15rem 0.35rem 0.1rem;
+  border: 1px solid var(--gold-dim);
+  border-radius: 0.25rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #f0d089;
+}
+
+.bluff-file--charged .bluff-chip {
+  border-color: rgba(214, 74, 88, 0.7);
+  color: var(--charge-ink);
+}
+
+.bluff-pips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px;
+  max-width: 4.6rem;
+}
+
+.bluff-pips i {
+  width: 0.5rem;
+  height: 0.25rem;
+  border-radius: 1px;
+  background: var(--gold);
+}
+
+.bluff-pips__caught {
+  background: var(--charge) !important;
+}
+
+.bluff-pips__missed {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.bluff-honours__nothing {
+  margin: 0;
+  padding: 1rem 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+.bluff-honours__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+/* The way in, from the result screen. */
+.bluff-finish__sheet {
+  padding: 0.5rem 0.8rem;
+  border: 1px dashed var(--gold-dim);
+  border-radius: 0.6rem;
+  background: none;
+  color: var(--gold);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bluff-finish__sheet:hover {
+  background: rgba(233, 196, 106, 0.1);
+}
+
+.bluff-finish__confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bluff-confetti {
+  position: absolute;
+  top: -8%;
+  width: 0.4rem;
+  height: 0.75rem;
+  border-radius: 1px;
+  background: #d98fa3;
+  animation-name: bluff-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.bluff-confetti--gold {
+  background: var(--gold);
+}
+
+@keyframes bluff-fall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(105vh) rotate(540deg);
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bluff-stamp {
+    animation: none;
+  }
+
+  .bluff-confetti {
+    display: none;
+  }
+}

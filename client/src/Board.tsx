@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { WILD, type PlayerColor, type PlayerView, type Position } from '@sequence/shared';
-import { Card } from './Card';
+import { Card } from './cards';
 import { Chip } from './Chip';
 import { CornerTile } from './CornerTile';
 

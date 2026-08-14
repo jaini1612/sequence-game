@@ -101,7 +101,7 @@ function colorName(color: PlayerColor): string {
   return color[0] + color.slice(1).toLowerCase();
 }
 
-function App() {
+function App({ onExit }: { onExit: () => void }) {
   const [playerId] = useState(getPlayerId);
   const [phase, setPhase] = useState<Phase>(() => (getStoredRoomCode() ? 'rejoining' : 'lobby'));
   const [roomCode, setRoomCode] = useState<string>(getStoredRoomCode);
@@ -288,7 +288,9 @@ function App() {
   }
 
   if (phase === 'lobby') {
-    return <Lobby onCreate={handleCreate} onLookupRoom={handleLookupRoom} error={error} />;
+    return (
+      <Lobby onCreate={handleCreate} onLookupRoom={handleLookupRoom} onExit={onExit} error={error} />
+    );
   }
 
   if (phase === 'rejoining') {

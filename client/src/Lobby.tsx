@@ -5,7 +5,7 @@ import {
   PLAYABLE_PLAYER_COUNTS,
   type PlayerColor,
 } from '@sequence/shared';
-import { Card } from './Card';
+import { Card } from './cards';
 import { Chip } from './Chip';
 
 export interface CreateOptions {
@@ -90,11 +90,14 @@ function Segmented({
 export function Lobby({
   onCreate,
   onLookupRoom,
+  onExit,
   error,
 }: {
   onCreate: (options: CreateOptions) => void;
   /** Looks a code up; App then swaps this screen for ClaimColor once the room answers. */
   onLookupRoom: (code: string, name: string) => void;
+  /** Back to the portal, where the other game is. */
+  onExit: () => void;
   error: string | null;
 }) {
   const [name, setName] = useState('');
@@ -109,6 +112,10 @@ export function Lobby({
 
   return (
     <div className="lobby">
+      <button type="button" className="portal-back" onClick={onExit}>
+        ← All games
+      </button>
+
       <div className="lobby__hero" aria-hidden="true">
         <div className="lobby__fan">
           <Card code="JS" />

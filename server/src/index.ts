@@ -12,6 +12,7 @@ import {
   type PlayerColor,
 } from '@sequence/shared';
 import { Room, RoomManager } from './rooms.js';
+import { registerBluffGateway } from './bluff/gateway.js';
 
 const PORT = Number(process.env.PORT) || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
@@ -24,6 +25,10 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: CLIENT_ORIGIN } });
 
 const rooms = new RoomManager();
+
+// Bluff lives on its own namespace with its own rooms, events and timers. Sequence below is
+// untouched by it, and the two games can only ever talk past each other.
+registerBluffGateway(io.of('/bluff'));
 
 function roomPayload(room: Room) {
   return {

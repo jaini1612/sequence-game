@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "client", "--", "--port", "5174", "--strictPort"],
+      "port": 5174
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "CLIENT_ORIGIN=http://localhost:5174 npm run dev:server"],
+      "port": 3001
+    }
+  ]
+}

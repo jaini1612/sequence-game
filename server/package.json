@@ -9,6 +9,7 @@
     "typecheck": "tsc -p . --noEmit"
   },
   "dependencies": {
+    "@bluff/shared": "*",
     "@sequence/shared": "*",
     "cors": "^2.8.5",
     "express": "^4.19.2",

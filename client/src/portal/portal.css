@@ -1,0 +1,222 @@
+.portal {
+  position: relative;
+  /*
+   * Without a stacking context of its own, the backdrop below (z-index: -1) would slide behind the
+   * *body's* background as well and be lost under Sequence's green felt. Isolating keeps it behind
+   * the portal's own content and nothing else.
+   */
+  isolation: isolate;
+  width: 100%;
+  max-width: 46rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 0.5rem 0 1rem;
+}
+
+/*
+ * The portal belongs to neither game, so it paints over the green felt with its own ground rather
+ * than inheriting a table it is not sitting at. Fixed and behind everything, so it covers the whole
+ * viewport however tall the content grows.
+ */
+.portal::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 100% 70% at 50% 0%, rgba(233, 196, 106, 0.1), transparent 60%),
+    radial-gradient(ellipse at 50% 45%, #21232c 0%, #14161c 55%, #08090c 100%);
+}
+
+.portal__head {
+  text-align: center;
+}
+
+.portal__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(233, 196, 106, 0.75);
+}
+
+.portal__title {
+  margin: 0;
+  font-size: clamp(1.9rem, 8vw, 2.7rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(180deg, #fff 0%, #cfd3dd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.portal__games {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40rem) {
+  .portal__games {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.portal__game {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.portal__game:hover,
+.portal__game:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(233, 196, 106, 0.5);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  outline: none;
+}
+
+.portal__game:active {
+  transform: translateY(-1px);
+}
+
+.portal__art {
+  position: relative;
+  height: 9.5rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.portal__game--sequence .portal__art {
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 15%, rgba(255, 255, 255, 0.09), transparent 60%),
+    linear-gradient(160deg, #1a5b43, #0d3325);
+}
+
+.portal__game--bluff .portal__art {
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 15%, rgba(255, 220, 170, 0.14), transparent 60%),
+    linear-gradient(160deg, #6d1626, #2c0710);
+}
+
+/* A corner of a Sequence board, tilted away like a table seen from a chair. */
+.portal__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 2.1rem);
+  gap: 0.22rem;
+  transform: rotateX(28deg) rotate(-6deg) scale(1.08);
+}
+
+.portal__tile {
+  position: relative;
+  width: 2.1rem;
+  height: 2.9rem;
+  --card-font: 8px;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.portal__chip {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.portal__chip--blue {
+  background: radial-gradient(circle at 35% 30%, #6ea8ff, #1f52b8);
+}
+
+.portal__chip--red {
+  background: radial-gradient(circle at 35% 30%, #ff8a8a, #b81f2c);
+}
+
+/* Three cards held in a hand, one of them face down - which is the whole game. */
+.portal__fan {
+  display: flex;
+  align-items: center;
+}
+
+.portal__fan-card {
+  width: 3.2rem;
+  height: 4.5rem;
+  --card-font: 12px;
+  border-radius: 0.3em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.portal__fan-card:first-child {
+  transform: rotate(-14deg) translateY(6px);
+  margin-right: -0.7rem;
+}
+
+.portal__fan-card:nth-child(2) {
+  transform: translateY(-6px) scale(1.06);
+  z-index: 1;
+}
+
+.portal__fan-card:last-child {
+  transform: rotate(14deg) translateY(6px);
+  margin-left: -0.7rem;
+}
+
+.portal__label {
+  padding: 0.9rem 1rem 1.1rem;
+}
+
+.portal__label h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  letter-spacing: 0.01em;
+}
+
+.portal__label p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: rgba(242, 242, 242, 0.62);
+}
+
+.portal__foot {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: rgba(242, 242, 242, 0.42);
+}
+
+/* The way back to the front door, shown inside each game's own lobby. */
+.portal-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(242, 242, 242, 0.75);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.portal-back:hover {
+  border-color: rgba(233, 196, 106, 0.5);
+  color: #f2f2f2;
+}
