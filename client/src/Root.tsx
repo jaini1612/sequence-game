@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { Portal, type GameKey } from './portal/Portal';
+import { useSurfaceTheme } from './surfaceTheme';
 
 /**
  * Which game is on screen. Each one is loaded only once it has been chosen, so opening the portal
@@ -18,6 +19,9 @@ function storedGame(): GameKey | null {
 
 export function Root() {
   const [game, setGame] = useState<GameKey | null>(storedGame);
+
+  // Follows whichever screen is up, so the browser bars never wear the other game's colours.
+  useSurfaceTheme(game ?? 'portal');
 
   function pick(next: GameKey) {
     sessionStorage.setItem(GAME_KEY, next);

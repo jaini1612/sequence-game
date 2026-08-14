@@ -92,9 +92,16 @@
   transform: translateY(-1px);
 }
 
+/*
+ * Sized by its contents, not to a fixed height. The art used to fit inside a 9.5rem box only because
+ * the grid's 3D tilt happened to compress it to within a pixel of the edges - so any device whose
+ * font metrics or zoom nudged it a fraction taller cropped the bottom row of cards clean off. A
+ * min-height plus padding means the panel grows to fit instead of slicing.
+ */
 .portal__art {
   position: relative;
-  height: 9.5rem;
+  min-height: 10rem;
+  padding: 0.7rem 0;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -117,7 +124,8 @@
   display: grid;
   grid-template-columns: repeat(3, 2.1rem);
   gap: 0.22rem;
-  transform: rotateX(28deg) rotate(-6deg) scale(1.08);
+  /* No scale-up: the tilt alone is the effect, and the extra 8% was what ate the clearance. */
+  transform: rotateX(26deg) rotate(-6deg);
 }
 
 .portal__tile {
