@@ -595,6 +595,28 @@ button:disabled {
   color: rgba(242, 242, 242, 0.7);
 }
 
+.outcome__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* The quiet way out, next to the loud one: leaving needs nobody else's agreement. */
+.outcome__leave {
+  padding: 0.35rem 1.1rem;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f2f2f2;
+  cursor: pointer;
+}
+
+.outcome__leave:hover {
+  border-color: rgba(247, 210, 74, 0.7);
+}
+
 .game__error {
   background: #7f1d1d;
   padding: 0.5rem 1rem;

@@ -344,6 +344,7 @@ function App({ onExit }: { onExit: () => void }) {
           needed={room?.size ?? rematchVotes.length + 1}
           youVoted={rematchVotes.includes(playerId)}
           onRematch={handleRematch}
+          onLeave={() => leaveRoom(null)}
         />
       )}
       <div className="game__table">

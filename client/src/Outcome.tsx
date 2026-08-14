@@ -13,6 +13,7 @@ export function Outcome({
   needed,
   youVoted,
   onRematch,
+  onLeave,
 }: {
   youWon: boolean;
   /** Named by colour, since "opponent" is ambiguous once a third player is at the table. */
@@ -21,6 +22,8 @@ export function Outcome({
   needed: number;
   youVoted: boolean;
   onRematch: () => void;
+  /** Out of this room and back to the lobby, without waiting on anybody else. */
+  onLeave: () => void;
 }) {
   // Picked once, when the game ends. Re-rolling it on every re-render would reshuffle the line
   // under the player as chips land and votes come in.
@@ -42,16 +45,22 @@ export function Outcome({
         )}
       </p>
       <p className="outcome__line">{line}</p>
-      <button
-        type="button"
-        className="outcome__rematch"
-        onClick={onRematch}
-        disabled={youVoted}
-        // Everyone has to ask, so a player still reading the taunt is never dragged into a new deal.
-      >
-        {youVoted ? `Waiting for the table… ${votes}/${needed}` : 'Rematch'}
-        {!youVoted && votes > 0 && ` (${votes}/${needed} in)`}
-      </button>
+      <div className="outcome__actions">
+        <button
+          type="button"
+          className="outcome__rematch"
+          onClick={onRematch}
+          disabled={youVoted}
+          // Everyone has to ask, so a player still reading the taunt is never dragged into a new deal.
+        >
+          {youVoted ? `Waiting for the table… ${votes}/${needed}` : 'Rematch'}
+          {!youVoted && votes > 0 && ` (${votes}/${needed} in)`}
+        </button>
+        {/* A rematch needs the whole table to agree, so there has to be a way out that does not. */}
+        <button type="button" className="outcome__leave" onClick={onLeave}>
+          Back to lobby
+        </button>
+      </div>
     </div>
   );
 }
