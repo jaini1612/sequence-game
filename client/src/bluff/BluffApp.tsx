@@ -6,7 +6,7 @@ import {
   type BluffEvent,
   type BluffView,
 } from '@bluff/shared';
-import { bluffSocket } from './socket';
+import { bluffSocket, getConnectError, SERVER_ORIGIN } from './socket';
 import {
   clearStoredRoomCode,
   getPlayerId,
@@ -189,6 +189,8 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState(bluffSocket.connected);
+  // Seeded from the module, which has been listening since before this component existed.
+  const [connectError, setConnectError] = useState<string | null>(getConnectError);
   const [hostLine, setHostLine] = useState<string | null>(null);
   const [flight, setFlight] = useState<Flight | null>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
@@ -271,6 +273,7 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
     // Every reconnect brings a new socket id, so the seat has to be re-claimed each time.
     function handleConnect() {
       setOnline(true);
+      setConnectError(null);
       const code = roomCodeRef.current;
       if (!code) return;
       bluffSocket
@@ -286,19 +289,36 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
       setOnline(false);
     }
 
+    /**
+     * Why the connection could not be made. Worth surfacing rather than swallowing: "Invalid
+     * namespace" means the server is running a build without the Bluff gateway, and a CORS refusal
+     * means it is running but will not talk to this origin. Both look like "nothing happens".
+     */
+    function handleConnectError(err: Error) {
+      setOnline(false);
+      setConnectError(err.message);
+    }
+
     bluffSocket.on('room:update', handleRoom);
     bluffSocket.on('game:update', handleGame);
     bluffSocket.on('connect', handleConnect);
     bluffSocket.on('disconnect', handleDisconnect);
-    // The socket connects on import, so it may already be up before this effect runs - in which case
-    // 'connect' has fired and will not fire again. Re-claim the seat now rather than hanging.
+    bluffSocket.on('connect_error', handleConnectError);
+    /*
+     * Catch up on anything that happened between the socket being created on import and these
+     * listeners going on. Both outcomes land in that window: a successful connect fires 'connect'
+     * once and never again, and a refused namespace fires 'connect_error' once and is never retried.
+     * Reading the current state here is what stops either from being missed entirely.
+     */
     if (bluffSocket.connected) handleConnect();
+    else setConnectError(getConnectError());
 
     return () => {
       bluffSocket.off('room:update', handleRoom);
       bluffSocket.off('game:update', handleGame);
       bluffSocket.off('connect', handleConnect);
       bluffSocket.off('disconnect', handleDisconnect);
+      bluffSocket.off('connect_error', handleConnectError);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerId]);
@@ -336,7 +356,20 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
     setError(message);
   }
 
-  /** Fire-and-forget action: the server answers with either an error or a fresh view. */
+  /**
+   * Why an action got no answer, in the player's terms.
+   *
+   * A silent socket and a slow one look identical from the emit's point of view - socket.io queues
+   * anything sent while disconnected and delivers it if the connection ever comes back - so the
+   * timeout alone cannot tell them apart. The live connection state can, and the two need different
+   * advice: one is worth retrying, the other means the game server is not reachable at all.
+   */
+  function noAnswer(): string {
+    return bluffSocket.connected
+      ? 'The table did not answer in time. Try that again.'
+      : `Cannot reach the game server at ${SERVER_ORIGIN}. If it has been idle it may take a minute to start.`;
+  }
+
   /**
    * Every in-game action goes through here, and every one of them is sent with a deadline.
    *
@@ -348,19 +381,26 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
     setBusy(true);
     bluffSocket.timeout(8000).emit(event, { roomCode, ...data }, (err: unknown, res?: Ack) => {
       setBusy(false);
-      if (err) setError('The table did not answer — check your connection and try again.');
+      if (err) setError(noAnswer());
       else if (!res?.ok) setError(res?.error ?? fallback);
       else setError(null);
     });
   }
 
-  /** Opening or claiming a seat. Same deadline as the in-game actions, and for the same reason. */
+  /**
+   * Opening or claiming a seat, with a deadline measured in cold starts rather than round trips.
+   *
+   * This is the first thing a player ever asks of the server, so it is the one request that can be
+   * waiting on a free host waking from sleep - which takes the better part of a minute, where a move
+   * made mid-game never waits longer than a moment. A deadline sized for a move turns an ordinary
+   * first visit into a failure.
+   */
   function takeSeat(event: 'room:create' | 'room:join', data: Record<string, unknown>, fallback: string) {
     setBusy(true);
-    bluffSocket.timeout(10000).emit(event, { playerId, ...data }, (err: unknown, res?: Ack) => {
+    bluffSocket.timeout(75000).emit(event, { playerId, ...data }, (err: unknown, res?: Ack) => {
       setBusy(false);
       if (err || !res?.ok || !res.roomCode) {
-        setError(err ? 'The server did not answer — it may still be waking up.' : (res?.error ?? fallback));
+        setError(err ? noAnswer() : (res?.error ?? fallback));
         return;
       }
       storeRoomCode(res.roomCode);
@@ -402,6 +442,8 @@ export default function BluffApp({ onExit }: { onExit: () => void }) {
           onExit={onExit}
           error={error}
           busy={busy}
+          online={online}
+          connectError={connectError}
         />
       </div>
     );

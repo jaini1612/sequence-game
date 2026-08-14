@@ -52,12 +52,18 @@ export function BluffLobby({
   onExit,
   error,
   busy,
+  online,
+  connectError,
 }: {
   onCreate: (name: string, config: BluffConfig) => void;
   onJoin: (name: string, code: string) => void;
   onExit: () => void;
   error: string | null;
   busy: boolean;
+  /** Whether the socket has actually reached the game server. */
+  online: boolean;
+  /** Socket.io's own reason for refusing, when it has one. */
+  connectError: string | null;
 }) {
   const [name, setName] = useState(getStoredName);
   const [playerCount, setPlayerCount] = useState(4);
@@ -184,6 +190,32 @@ export function BluffLobby({
           Join
         </button>
       </div>
+
+      {/*
+        Said before the button is pressed, not after it fails. Waiting out a thirty-second timeout to
+        be told the server was never there is a poor way to learn it.
+      */}
+      {/* A sleeping free host takes the better part of a minute to answer the first request, and a
+          silent disabled button for that long reads as broken. */}
+      {busy && (
+        <p className="bluff-offline" role="status">
+          Dealing you in… if the server has been idle it can take up to a minute to wake.
+        </p>
+      )}
+
+      {!busy && !online && (
+        <p className="bluff-offline" role="status">
+          {connectError ? (
+            <>
+              Cannot reach the game server — <strong>{connectError}</strong>.
+              {connectError.toLowerCase().includes('namespace') &&
+                ' The server is running a build without SparrowBluff on it.'}
+            </>
+          ) : (
+            'Connecting to the game server…'
+          )}
+        </p>
+      )}
 
       {error && <p className="bluff-error">{error}</p>}
     </div>

@@ -296,6 +296,23 @@
   cursor: pointer;
 }
 
+/* Said while the lobby is still usable, so it warns rather than blocks. */
+.bluff-offline {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  border-radius: 0.6rem;
+  background: rgba(233, 196, 106, 0.08);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(243, 238, 228, 0.75);
+}
+
+.bluff-offline strong {
+  color: var(--gold);
+  font-weight: 700;
+}
+
 /* --------------------------------------------------------- waiting room */
 
 .bluff-waiting {
