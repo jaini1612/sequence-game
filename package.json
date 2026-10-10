@@ -4,12 +4,13 @@
   "workspaces": [
     "shared",
     "bluff-shared",
+    "staccs-shared",
     "server",
     "client"
   ],
   "scripts": {
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client",
-    "test": "npm run test -w shared && npm run test -w bluff-shared"
+    "test": "npm run test -w shared && npm run test -w bluff-shared && npm run test -w staccs-shared"
   }
 }
