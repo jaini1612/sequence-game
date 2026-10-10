@@ -31,6 +31,6 @@ export default defineConfig({
   // Both shared packages are workspace packages with no build step (they ship .ts source
   // directly), so they must be treated as project source rather than pre-bundled dependencies.
   optimizeDeps: {
-    exclude: ['@sequence/shared', '@bluff/shared'],
+    exclude: ['@sequence/shared', '@bluff/shared', '@staccs/shared'],
   },
 })

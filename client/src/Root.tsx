@@ -8,13 +8,14 @@ import { useSurfaceTheme } from './surfaceTheme';
  */
 const SequenceApp = lazy(() => import('./App'));
 const BluffApp = lazy(() => import('./bluff/BluffApp'));
+const StaccsApp = lazy(() => import('./staccs/StaccsApp'));
 
 const GAME_KEY = 'portal:game';
 
 /** Per-tab, like the seats themselves, so a reload drops you back into the game you were playing. */
 function storedGame(): GameKey | null {
   const stored = sessionStorage.getItem(GAME_KEY);
-  return stored === 'sequence' || stored === 'bluff' ? stored : null;
+  return stored === 'sequence' || stored === 'bluff' || stored === 'staccs' ? stored : null;
 }
 
 export function Root() {
@@ -37,7 +38,9 @@ export function Root() {
 
   return (
     <Suspense fallback={<p className="portal__foot">Shuffling…</p>}>
-      {game === 'sequence' ? <SequenceApp onExit={exit} /> : <BluffApp onExit={exit} />}
+      {game === 'sequence' && <SequenceApp onExit={exit} />}
+      {game === 'bluff' && <BluffApp onExit={exit} />}
+      {game === 'staccs' && <StaccsApp onExit={exit} />}
     </Suspense>
   );
 }

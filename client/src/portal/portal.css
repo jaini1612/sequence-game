@@ -119,6 +119,28 @@
     linear-gradient(160deg, #6d1626, #2c0710);
 }
 
+.portal__game--staccs .portal__art {
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 15%, rgba(255, 255, 255, 0.18), transparent 60%),
+    linear-gradient(160deg, #3f8cff, #1238a6);
+}
+
+/* Three STACCS cubes, the Wild in the middle standing a little proud. */
+.portal__cubes {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.15rem;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+}
+
+.portal__cubes > :first-child {
+  transform: rotate(-8deg) translateY(4px);
+}
+
+.portal__cubes > :last-child {
+  transform: rotate(8deg) translateY(4px);
+}
+
 /* A corner of a Sequence board, tilted away like a table seen from a chair. */
 .portal__grid {
   display: grid;

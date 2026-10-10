@@ -13,6 +13,7 @@ import {
 } from '@sequence/shared';
 import { Room, RoomManager } from './rooms.js';
 import { registerBluffGateway } from './bluff/gateway.js';
+import { registerStaccsGateway } from './staccs/gateway.js';
 
 const PORT = Number(process.env.PORT) || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
@@ -29,6 +30,7 @@ const rooms = new RoomManager();
 // Bluff lives on its own namespace with its own rooms, events and timers. Sequence below is
 // untouched by it, and the two games can only ever talk past each other.
 registerBluffGateway(io.of('/bluff'));
+registerStaccsGateway(io.of('/staccs'));
 
 function roomPayload(room: Room) {
   return {

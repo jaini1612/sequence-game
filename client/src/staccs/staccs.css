@@ -1,0 +1,858 @@
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
+
+/*
+ * STACCS. Straight out of the rulebook: electric-blue isometric brickwork, white cube cards, cyan for
+ * anything you can act on, a pixel face for type. Every class is prefixed `staccs-` so nothing here
+ * can reach the other games.
+ */
+.staccs {
+  --blue-hi: #3d8bff;
+  --blue: #1f5fe0;
+  --blue-deep: #0f2f8f;
+  --cyan: #29e4ff;
+  --cyan-dim: rgba(41, 228, 255, 0.35);
+  --red: #e3173a;
+  --ink: #f4f8ff;
+  --ink-dim: rgba(244, 248, 255, 0.68);
+  --pixel: 'Silkscreen', 'Courier New', monospace;
+  --bubble: #ffffff;
+  --bubble-ink: #123a9c;
+
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 32rem;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Its own ground: lit blue falling to navy, with a faint isometric lattice like the rulebook's walls. */
+.staccs::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(30deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(-30deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 34px),
+    radial-gradient(ellipse 120% 80% at 50% 0%, #3f8cff 0%, #1d56d6 45%, #0e2c86 100%);
+}
+
+/* ------------------------------------------------------------------ type & buttons */
+
+.staccs-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--pixel);
+  font-weight: 700;
+  font-size: clamp(2.6rem, 13vw, 3.8rem);
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow:
+    0 4px 0 #0d2f9a,
+    0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.staccs-title--small {
+  font-size: clamp(1.5rem, 7vw, 2.1rem);
+}
+
+.staccs-tagline {
+  margin: 0;
+  text-align: center;
+  font-family: var(--pixel);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.staccs-primary,
+.staccs-secondary,
+.staccs-uhoh,
+.staccs-catch {
+  font: inherit;
+  font-family: var(--pixel);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.staccs-primary {
+  border: none;
+  background: var(--cyan);
+  color: #08245f;
+  box-shadow: 0 4px 0 #0aa6c2;
+}
+
+.staccs-secondary {
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: rgba(8, 30, 100, 0.35);
+  color: var(--ink);
+}
+
+.staccs-uhoh {
+  border: none;
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 4px 0 #9b0e27;
+  animation: staccs-wobble 1.6s ease-in-out infinite;
+}
+
+.staccs-catch {
+  border: 2px dashed #ffd23f;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffd23f;
+}
+
+.staccs-primary:hover:not(:disabled),
+.staccs-uhoh:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.staccs-primary:active:not(:disabled),
+.staccs-uhoh:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.staccs-primary:disabled,
+.staccs-secondary:disabled,
+.staccs-uhoh:disabled,
+.staccs-catch:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.staccs-primary:focus-visible,
+.staccs-secondary:focus-visible,
+.staccs-card:focus-visible,
+.staccs-mode:focus-visible {
+  outline: 3px solid #ffd23f;
+  outline-offset: 2px;
+}
+
+.staccs-link {
+  border: none;
+  background: none;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.staccs-error {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.8rem;
+  background: rgba(227, 23, 58, 0.92);
+  color: #fff;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.staccs-error--toast {
+  position: fixed;
+  left: 50%;
+  top: 4.2rem;
+  transform: translateX(-50%);
+  z-index: 30;
+  max-width: min(92vw, 28rem);
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+.staccs-note {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+}
+
+/* ------------------------------------------------------------------ lobby */
+
+.staccs-lobby {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  width: 100%;
+}
+
+.staccs-lobby__hero {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.2rem;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.35));
+}
+
+.staccs-lobby__hero > :nth-child(1) {
+  transform: translateY(6px) rotate(-8deg);
+}
+
+.staccs-lobby__hero > :nth-child(3) {
+  transform: translateY(6px) rotate(8deg);
+}
+
+.staccs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.staccs-field__label {
+  font-family: var(--pixel);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.staccs-field input,
+.staccs-join input {
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.9rem;
+  border: 2px solid transparent;
+  background: var(--bubble);
+  color: var(--bubble-ink);
+}
+
+.staccs-field input:focus,
+.staccs-join input:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+
+.staccs-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.staccs-mode {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid transparent;
+  border-radius: 1.1rem;
+  background: rgba(10, 40, 130, 0.45);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.staccs-mode:hover {
+  background: rgba(10, 40, 130, 0.65);
+}
+
+.staccs-mode--on {
+  border-color: var(--cyan);
+  background: rgba(41, 228, 255, 0.16);
+}
+
+.staccs-mode--soon {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.staccs-mode__num {
+  font-family: var(--pixel);
+  font-weight: 700;
+  font-size: 1.9rem;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+}
+
+.staccs-mode__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.staccs-mode__body strong {
+  font-family: var(--pixel);
+  font-size: 1rem;
+}
+
+.staccs-mode__body small {
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.staccs-mode__players {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: var(--bubble-ink);
+  font-family: var(--pixel);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.staccs-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.staccs-choice__opt {
+  min-width: 2.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--pixel);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staccs-choice__opt--on {
+  border-color: var(--cyan);
+  background: var(--cyan);
+  color: #08245f;
+}
+
+.staccs-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+}
+
+.staccs-toggle input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--cyan);
+}
+
+.staccs-join {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.staccs-join input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--pixel);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.staccs-waiting {
+  align-items: center;
+  text-align: center;
+}
+
+.staccs-code {
+  margin: 0.3rem 0;
+  padding: 0.5rem 1.2rem;
+  border-radius: 1rem;
+  background: #fff;
+  color: var(--bubble-ink);
+  font-family: var(--pixel);
+  font-size: 2.2rem;
+  letter-spacing: 0.25em;
+}
+
+.staccs-seated {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.staccs-seated li {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--bubble-ink);
+  font-weight: 600;
+}
+
+.staccs-seated .staccs-seated--empty {
+  background: transparent;
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+  color: var(--ink-dim);
+}
+
+.staccs-seated .staccs-seated--away {
+  opacity: 0.55;
+}
+
+/* ------------------------------------------------------------------ the table screen */
+
+.staccs--play {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  padding: max(0.5rem, env(safe-area-inset-top)) 0.6rem max(0.5rem, env(safe-area-inset-bottom));
+  gap: 0.4rem;
+}
+
+.staccs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.staccs-bar__mode {
+  font-family: var(--pixel);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.staccs-bar__code {
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--bubble-ink);
+  font-family: var(--pixel);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+}
+
+.staccs-bar__offline {
+  font-size: 0.75rem;
+  color: #ffd23f;
+}
+
+.staccs-bar__help {
+  margin-left: auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: #fff;
+  font-family: var(--pixel);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staccs-seats {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  align-items: center;
+}
+
+.staccs-seat {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(8, 30, 100, 0.45);
+  font-size: 0.8rem;
+}
+
+.staccs-seat--turn {
+  border-color: var(--cyan);
+  background: rgba(41, 228, 255, 0.2);
+  box-shadow: 0 0 14px rgba(41, 228, 255, 0.45);
+}
+
+.staccs-seat--you .staccs-seat__name {
+  color: var(--cyan);
+}
+
+.staccs-seat--away {
+  opacity: 0.5;
+}
+
+.staccs-seat__name {
+  font-weight: 700;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staccs-seat__count {
+  font-family: var(--pixel);
+  font-size: 0.75rem;
+}
+
+.staccs-seat__badge {
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.3rem;
+  background: var(--red);
+  font-family: var(--pixel);
+  font-size: 0.6rem;
+}
+
+.staccs-stat {
+  flex: none;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+}
+
+.staccs-stat strong {
+  font-family: var(--pixel);
+  color: #fff;
+}
+
+.staccs-stat--pile {
+  margin-left: auto;
+}
+
+.staccs-seats--solo {
+  justify-content: center;
+}
+
+/* The table itself: a lighter slab with a dashed edge, so where the cards cannot go is visible. */
+.staccs-table {
+  position: relative;
+  min-height: 0;
+  border-radius: 1.2rem;
+  background: radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 70%);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.staccs-table__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+  filter: drop-shadow(0 0.18rem 0.3rem rgba(4, 18, 70, 0.45));
+}
+
+.staccs-table__edge {
+  fill: rgba(5, 25, 90, 0.18);
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 0.06;
+  stroke-dasharray: 0.3 0.2;
+}
+
+.cube__edge {
+  stroke: rgba(12, 30, 80, 0.45);
+  stroke-width: 0.028;
+  stroke-linejoin: round;
+}
+
+.cube__locked {
+  fill: rgba(9, 28, 95, 0.5);
+}
+
+.cube__glow--touch {
+  fill: rgba(41, 228, 255, 0.62);
+  stroke: #b9f6ff;
+  stroke-width: 0.04;
+}
+
+.cube__glow--open {
+  fill: rgba(41, 228, 255, 0.28);
+  stroke: rgba(41, 228, 255, 0.9);
+  stroke-width: 0.03;
+  animation: staccs-pulse 1.4s ease-in-out infinite;
+}
+
+.cube__block {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 7;
+}
+
+.cube--ghost {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 0.12px #fff) drop-shadow(0 0 0.25px var(--cyan));
+}
+
+.staccs-spot {
+  fill: rgba(41, 228, 255, 0.18);
+  stroke: var(--cyan);
+  stroke-width: 0.05;
+  stroke-dasharray: 0.16 0.1;
+  pointer-events: none;
+  animation: staccs-pulse 1.4s ease-in-out infinite;
+}
+
+.staccs-fresh {
+  animation: staccs-drop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.staccs-zoom {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.staccs-zoom button {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.7rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--bubble-ink);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* The dock: what just happened, what to do, the buttons, and your hand. */
+.staccs-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-width: 40rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.staccs-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.74rem;
+  color: var(--ink-dim);
+  text-align: center;
+  min-height: 1.1em;
+}
+
+.staccs-log li:last-child {
+  color: var(--ink);
+}
+
+.staccs-prompt {
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border-radius: 1.1rem;
+  background: var(--bubble);
+  color: var(--bubble-ink);
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-align: center;
+  box-shadow: 0 4px 0 rgba(8, 30, 100, 0.35);
+}
+
+.staccs-prompt:empty {
+  display: none;
+}
+
+.staccs-actions,
+.staccs-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.staccs-actions:empty {
+  display: none;
+}
+
+.staccs-suits {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.staccs-suit {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.7rem;
+  border: 3px solid transparent;
+  background: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.staccs-suit--on {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(41, 228, 255, 0.4);
+}
+
+.staccs-hand {
+  display: flex;
+  gap: 0.15rem;
+  align-items: flex-end;
+  overflow-x: auto;
+  padding: 0.6rem 0.2rem 0.2rem;
+  min-height: 4.6rem;
+  justify-content: safe center;
+  scrollbar-width: thin;
+}
+
+.staccs-hand__label {
+  align-self: center;
+  font-family: var(--pixel);
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+  padding: 0 0.4rem;
+}
+
+.staccs-card {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 5px rgba(3, 16, 60, 0.45));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.staccs-card:hover {
+  transform: translateY(-4px);
+}
+
+.staccs-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.staccs-card__tag {
+  padding: 0 0.35rem;
+  border-radius: 0.35rem;
+  background: #fff;
+  font-family: var(--pixel);
+  font-weight: 700;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.staccs-card--on {
+  transform: translateY(-10px);
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 6px 6px rgba(3, 16, 60, 0.5));
+}
+
+.staccs-card--on:hover {
+  transform: translateY(-10px);
+}
+
+.staccs-card--idle {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.staccs-card--idle:hover {
+  transform: none;
+}
+
+.cube-icon {
+  display: block;
+  overflow: visible;
+}
+
+/* ------------------------------------------------------------------ overlays */
+
+.staccs-finish {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(6, 20, 70, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+.staccs-finish__card {
+  width: min(100%, 24rem);
+  max-height: 88dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem 1.3rem;
+  border-radius: 1.6rem;
+  background: linear-gradient(170deg, #3a86ff, #1745c4);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.35),
+    0 20px 50px rgba(0, 0, 0, 0.45);
+  animation: staccs-drop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.staccs-rules h3 {
+  margin: 0.3rem 0 0;
+  font-family: var(--pixel);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.staccs-rules ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.staccs-float {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 15;
+}
+
+/* ------------------------------------------------------------------ motion */
+
+@keyframes staccs-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes staccs-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4px) scale(1.04);
+  }
+}
+
+@keyframes staccs-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staccs-uhoh,
+  .staccs-spot,
+  .cube__glow--open,
+  .staccs-fresh,
+  .staccs-finish__card {
+    animation: none;
+  }
+}

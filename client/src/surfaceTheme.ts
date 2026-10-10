@@ -16,6 +16,7 @@ const SURFACE = {
   portal: '#14161c',
   sequence: '#0f3d2e',
   bluff: '#170f1c',
+  staccs: '#2f78f5',
 } as const;
 
 export type Surface = keyof typeof SURFACE;

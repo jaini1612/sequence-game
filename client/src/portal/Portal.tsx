@@ -1,10 +1,11 @@
 import { Card, CardBack } from '../cards';
+import { CubeIcon } from '../staccs/Cube';
 import './portal.css';
 
-export type GameKey = 'sequence' | 'bluff';
+export type GameKey = 'sequence' | 'bluff' | 'staccs';
 
 /**
- * The front door. Two games live behind it, and nothing else here knows how either one works - it
+ * The front door. Three games live behind it, and nothing else here knows how either one works - it
  * hands a key back and gets out of the way.
  */
 export function Portal({ onPick }: { onPick: (game: GameKey) => void }) {
@@ -52,6 +53,20 @@ export function Portal({ onPick }: { onPick: (game: GameKey) => void }) {
           <div className="portal__label">
             <h2>SparrowBluff</h2>
             <p>Lie through your teeth. Up to five players.</p>
+          </div>
+        </button>
+
+        <button type="button" className="portal__game portal__game--staccs" onClick={() => onPick('staccs')}>
+          <div className="portal__art" aria-hidden="true">
+            <div className="portal__cubes">
+              <CubeIcon card={{ id: 'p1', suit: 'C', rank: '5' }} size={46} />
+              <CubeIcon card={{ id: 'p2', suit: 'H', rank: 'W' }} size={56} />
+              <CubeIcon card={{ id: 'p3', suit: 'H', rank: 'J' }} size={46} />
+            </div>
+          </div>
+          <div className="portal__label">
+            <h2>STACCS</h2>
+            <p>Hexagonal cards that stacc in 3D. Solo, co-op, or up to ten players.</p>
           </div>
         </button>
       </div>
