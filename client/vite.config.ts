@@ -11,6 +11,12 @@ export default defineConfig({
       // cards.svg carries every court-card face and suit pip, so the app is unusable without it -
       // it belongs in the precache rather than being fetched on demand.
       includeAssets: ['favicon.svg', 'cards.svg'],
+      // The default only precaches js/css/html, which would leave the portal's display fonts to the
+      // network and drop it back to system type offline. woff2 alone: every browser that can run a
+      // service worker reads it, so the .woff fallbacks would only be dead weight in the cache.
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,woff2}'],
+      },
       manifest: {
         name: 'Sequence',
         short_name: 'Sequence',

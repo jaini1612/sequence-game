@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@bluff/shared": "*",
+    "@fontsource/bungee": "^5.3.0",
+    "@fontsource/luckiest-guy": "^5.3.0",
+    "@fontsource/rye": "^5.3.0",
     "@sequence/shared": "*",
     "@staccs/shared": "*",
     "react": "^19.2.8",

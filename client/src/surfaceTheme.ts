@@ -13,7 +13,7 @@ import { useEffect } from 'react';
  * rather than drawing a line across it.
  */
 const SURFACE = {
-  portal: '#14161c',
+  portal: '#141a33',
   sequence: '#0f3d2e',
   bluff: '#170f1c',
   staccs: '#2f78f5',
