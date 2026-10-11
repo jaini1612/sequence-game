@@ -2,7 +2,9 @@ import type { CSSProperties } from 'react';
 import '@fontsource/luckiest-guy/latin-400.css';
 import '@fontsource/rye/latin-400.css';
 import '@fontsource/bungee/latin-400.css';
+import type { PlayerColor } from '@sequence/shared';
 import { Card, CardBack } from '../cards';
+import { Chip } from '../Chip';
 import { CubeIcon } from '../staccs/Cube';
 import { Backdrop } from './Backdrop';
 import './portal.css';
@@ -12,7 +14,7 @@ export type GameKey = 'sequence' | 'bluff' | 'staccs';
 /** A corner of a Sequence board, wide enough to run off both edges of the thumbnail. */
 const BOARD = ['9H', '10S', 'QD', '5C', 'AS', '7H', '3D', 'KC', '8S', '2D', '6C', 'JH', '4S', 'QC', '10H', '5D', 'AH', '9C', '7S', 'KD', '3C'];
 /** Board index -> chip colour. The blue ones are one chip short of a sequence. */
-const CHIPS: Record<number, 'blue' | 'red' | 'green'> = { 1: 'red', 8: 'blue', 9: 'blue', 10: 'blue', 11: 'blue', 16: 'red', 19: 'green' };
+const CHIPS: Record<number, PlayerColor> = { 1: 'RED', 8: 'BLUE', 9: 'BLUE', 10: 'BLUE', 11: 'BLUE', 16: 'RED', 19: 'GREEN' };
 
 /** Five cards held in a hand, the middle one face down - which is the whole game. */
 const FAN: (string | null)[] = ['JD', 'QH', null, 'KS', 'AC'];
@@ -54,7 +56,7 @@ export function Portal({ onPick }: { onPick: (game: GameKey) => void }) {
               {BOARD.map((code, i) => (
                 <div key={code} className="portal__tile">
                   <Card code={code} />
-                  {CHIPS[i] && <span className={`portal__chip portal__chip--${CHIPS[i]}`} />}
+                  {CHIPS[i] && <Chip color={CHIPS[i]} />}
                 </div>
               ))}
             </div>

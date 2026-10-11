@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Card, CardBack } from '../cards';
+import { Chip } from '../Chip';
 import { CubeIcon } from '../staccs/Cube';
 
 /** A die face, pips laid out on a 3x3 grid (0-8, reading order). */
@@ -38,17 +39,17 @@ type Piece = {
 const PIECES: Piece[] = [
   { x: 4, y: 6, r: -18, d: 19, s: 1, art: <Card code="AS" /> },
   { x: 82, y: 4, r: 14, d: 23, s: 0.9, art: <CardBack /> },
-  { x: 70, y: 18, r: 0, d: 17, s: 0.8, art: <span className="backdrop__chip backdrop__chip--red" />, far: true },
+  { x: 70, y: 18, r: 0, d: 17, s: 0.8, art: <span className="backdrop__chip"><Chip color="RED" /></span>, far: true },
   { x: 12, y: 28, r: 8, d: 21, s: 0.7, art: <Die face={5} />, far: true },
   { x: 88, y: 32, r: -10, d: 25, s: 1, art: <Card code="KH" /> },
   { x: -2, y: 46, r: 22, d: 18, s: 0.9, art: <CubeIcon card={{ id: 'b1', suit: 'S', rank: 'Q' }} size={56} /> },
-  { x: 46, y: 40, r: -6, d: 27, s: 0.6, art: <span className="backdrop__chip backdrop__chip--blue" />, far: true },
+  { x: 46, y: 40, r: -6, d: 27, s: 0.6, art: <span className="backdrop__chip"><Chip color="BLUE" /></span>, far: true },
   { x: 78, y: 52, r: 18, d: 20, s: 0.8, art: <Die face={3} /> },
   { x: 8, y: 64, r: -14, d: 24, s: 1, art: <Card code="QD" /> },
-  { x: 90, y: 68, r: 6, d: 22, s: 0.9, art: <span className="backdrop__chip backdrop__chip--green" /> },
+  { x: 90, y: 68, r: 6, d: 22, s: 0.9, art: <span className="backdrop__chip"><Chip color="GREEN" /></span> },
   { x: 30, y: 76, r: 12, d: 26, s: 0.65, art: <CardBack />, far: true },
   { x: 64, y: 84, r: -20, d: 19, s: 1, art: <Card code="JC" /> },
-  { x: 2, y: 88, r: 4, d: 21, s: 0.8, art: <span className="backdrop__chip backdrop__chip--red" /> },
+  { x: 2, y: 88, r: 4, d: 21, s: 0.8, art: <span className="backdrop__chip"><Chip color="RED" /></span> },
   { x: 84, y: 90, r: -8, d: 23, s: 0.9, art: <CubeIcon card={{ id: 'b2', suit: 'H', rank: 'W' }} size={56} /> },
   { x: 40, y: 2, r: 10, d: 28, s: 0.6, art: <Die face={6} />, far: true },
   { x: 54, y: 62, r: 26, d: 30, s: 0.55, art: <Card code="7H" />, far: true },

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { PlayerColor } from '@sequence/shared';
+import './chip.css';
 
 /**
  * A moulded plastic playing chip, seen from directly above, the way the printed set's are: a flat
